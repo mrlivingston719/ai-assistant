@@ -53,5 +53,12 @@ async def get_db():
 
 async def get_db_session():
     """Get database session for dependency injection"""
-    async with get_db() as session:
-        yield session
+    async with AsyncSessionLocal() as session:
+        try:
+            yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
+        finally:
+            await session.close()

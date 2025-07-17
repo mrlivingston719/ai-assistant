@@ -3,11 +3,11 @@ Health check endpoints
 """
 
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 import httpx
 from datetime import datetime
 
-from ..database import get_db
+from ..database import get_db_session
 from ..config import settings
 
 router = APIRouter()
@@ -24,7 +24,7 @@ async def health_check():
 
 
 @router.get("/detailed")
-async def detailed_health_check(db: Session = Depends(get_db)):
+async def detailed_health_check(db: AsyncSession = Depends(get_db_session)):
     """Detailed health check including dependencies"""
     health_status = {
         "status": "healthy",
@@ -34,7 +34,7 @@ async def detailed_health_check(db: Session = Depends(get_db)):
     
     # Check database
     try:
-        db.execute("SELECT 1")
+        await db.execute("SELECT 1")
         health_status["services"]["database"] = "healthy"
     except Exception as e:
         health_status["services"]["database"] = f"unhealthy: {str(e)}"

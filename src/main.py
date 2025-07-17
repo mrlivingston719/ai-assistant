@@ -14,6 +14,7 @@ from .database import init_db
 from .vector_store import VectorStore
 from .telegram_bot import TelegramBot
 from .ollama_client import OllamaClient
+from .routers import health, meetings, telegram
 
 # Configure structured logging
 structlog.configure(
@@ -104,6 +105,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Include routers
+app.include_router(health.router, prefix="/health", tags=["health"])
+app.include_router(meetings.router, prefix="/meetings", tags=["meetings"])
+app.include_router(telegram.router, prefix="/telegram", tags=["telegram"])
+
 @app.get("/")
 async def root():
     """Root endpoint"""
@@ -156,12 +162,13 @@ async def status():
         }
     }
 
-@app.post("/webhook/telegram")
-async def telegram_webhook(update: dict):
-    """Telegram webhook endpoint"""
-    if telegram_bot:
-        await telegram_bot.handle_webhook(update)
-    return {"status": "ok"}
+# Telegram webhook endpoint moved to telegram router
+# @app.post("/webhook/telegram")
+# async def telegram_webhook(update: dict):
+#     """Telegram webhook endpoint"""
+#     if telegram_bot:
+#         await telegram_bot.handle_webhook(update)
+#     return {"status": "ok"}
 
 if __name__ == "__main__":
     import uvicorn

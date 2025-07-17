@@ -26,20 +26,40 @@ class Settings(BaseSettings):
         default="http://localhost:8000",
         description="ChromaDB server URL"
     )
+    chromadb_host: str = Field(
+        default="localhost",
+        description="ChromaDB server host"
+    )
+    chromadb_port: int = Field(
+        default=8000,
+        description="ChromaDB server port"
+    )
     
     # Ollama
     ollama_url: str = Field(
         default="http://localhost:11434",
         description="Ollama server URL"
     )
+    ollama_host: str = Field(
+        default="http://localhost:11434",
+        description="Ollama server URL (alias for compatibility)"
+    )
     ollama_model: str = Field(
         default="qwen2.5:14b",
         description="Ollama model to use"
+    )
+    embedding_model: str = Field(
+        default="qwen2.5:14b",
+        description="Model to use for embeddings"
     )
     
     # Telegram
     telegram_bot_token: str = Field(
         description="Telegram bot token"
+    )
+    telegram_webhook_url: Optional[str] = Field(
+        default=None,
+        description="Telegram webhook URL for production"
     )
     
     # Notion

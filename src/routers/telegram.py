@@ -3,12 +3,13 @@ Telegram bot integration
 """
 
 from fastapi import APIRouter, HTTPException, Request, Depends
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 import logging
 from datetime import datetime
 from typing import Dict, Any
 
-from ..database import get_db, Conversation
+from ..database import get_db
+from ..models import Conversation
 from ..config import settings
 from ..services.telegram_service import TelegramService
 from ..services.ollama_service import OllamaService
@@ -22,7 +23,7 @@ ollama_service = OllamaService()
 
 
 @router.post("/webhook")
-async def telegram_webhook(request: Request, db: Session = Depends(get_db)):
+async def telegram_webhook(request: Request, db: AsyncSession = Depends(get_db)):
     """Handle Telegram webhook updates"""
     try:
         # Get the update data
