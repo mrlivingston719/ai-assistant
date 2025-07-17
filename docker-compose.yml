@@ -30,6 +30,11 @@ services:
       - chroma_data:/chroma/chroma
     ports:
       - "8000:8000"
+    healthcheck:
+      test: ["CMD", "perl", "-e", "use IO::Socket::INET; exit(1) unless IO::Socket::INET->new(PeerAddr=>'localhost:8000',Timeout=>5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     networks:
       - assistant-network
 
