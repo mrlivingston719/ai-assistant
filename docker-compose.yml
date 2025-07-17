@@ -3,27 +3,27 @@ version: '3.8'
 services:
   postgres:
     image: postgres:15-alpine
-    container_name: rovodev-postgres
+    container_name: assistant-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: rovodev
-      POSTGRES_USER: rovodev
+      POSTGRES_DB: assistant
+      POSTGRES_USER: assistant
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U rovodev -d rovodev"]
+      test: ["CMD-SHELL", "pg_isready -U assistant -d assistant"]
       interval: 30s
       timeout: 10s
       retries: 3
     networks:
-      - rovodev-network
+      - assistant-network
 
   chromadb:
     image: chromadb/chroma:latest
-    container_name: rovodev-chromadb
+    container_name: assistant-chromadb
     restart: unless-stopped
     environment:
       - CHROMA_SERVER_HOST=0.0.0.0
@@ -38,14 +38,14 @@ services:
       timeout: 10s
       retries: 3
     networks:
-      - rovodev-network
+      - assistant-network
 
-  rovodev:
+  assistant:
     build: .
-    container_name: rovodev-api
+    container_name: assistant-api
     restart: unless-stopped
     environment:
-      - DATABASE_URL=postgresql://rovodev:${POSTGRES_PASSWORD}@postgres:5432/rovodev
+      - DATABASE_URL=postgresql://assistant:${POSTGRES_PASSWORD}@postgres:5432/assistant
       - CHROMADB_URL=http://chromadb:8000
       - OLLAMA_URL=http://host.docker.internal:11434
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
@@ -67,12 +67,12 @@ services:
       timeout: 10s
       retries: 3
     networks:
-      - rovodev-network
+      - assistant-network
 
 volumes:
   postgres_data:
   chroma_data:
 
 networks:
-  rovodev-network:
+  assistant-network:
     driver: bridge

@@ -36,8 +36,8 @@ if ! command -v git >/dev/null 2>&1; then
 fi
 
 # Set deployment directory
-DEPLOY_DIR="$HOME/rovodev"
-REPO_URL="https://github.com/yourusername/rovodev.git"
+DEPLOY_DIR="$HOME/ai-assistant"
+REPO_URL="https://github.com/mrlivingston719/ai-assistant.git"
 
 echo "📁 Deployment directory: $DEPLOY_DIR"
 echo "📡 Repository: $REPO_URL"
@@ -45,11 +45,11 @@ echo ""
 
 # Clone or update repository
 if [[ -d "$DEPLOY_DIR" ]]; then
-    echo "📂 RovoDev directory exists. Updating..."
+    echo "📂 AI Assistant directory exists. Updating..."
     cd "$DEPLOY_DIR"
     git pull origin main
 else
-    echo "📥 Cloning RovoDev repository..."
+    echo "📥 Cloning AI Assistant repository..."
     git clone "$REPO_URL" "$DEPLOY_DIR"
     cd "$DEPLOY_DIR"
 fi
@@ -183,7 +183,7 @@ else
     echo "3. Logs for errors: docker compose logs"
     echo "4. System resources: free -h"
     echo ""
-    echo "For help, see: https://github.com/yourusername/rovodev/issues"
+    echo "For help, see: https://github.com/mrlivingston719/ai-assistant/issues"
 fi
 
 echo ""
@@ -192,6 +192,6 @@ echo "📊 System Status:"
 
 echo ""
 echo "🔗 Useful Links:"
-echo "- Documentation: https://github.com/yourusername/rovodev"
-echo "- Issues: https://github.com/yourusername/rovodev/issues"
-echo "- Deployment Guide: https://github.com/yourusername/rovodev/blob/main/DEPLOYMENT.md"
+echo "- Documentation: https://github.com/mrlivingston719/ai-assistant"
+echo "- Issues: https://github.com/mrlivingston719/ai-assistant/issues"
+echo "- Deployment Guide: https://github.com/mrlivingston719/ai-assistant/blob/main/DEPLOYMENT.md"

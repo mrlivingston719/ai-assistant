@@ -89,7 +89,7 @@ async def lifespan(app: FastAPI):
 
 # Create FastAPI app
 app = FastAPI(
-    title="RovoDev Personal AI Assistant",
+    title="Personal AI Assistant",
     description="Local-first AI assistant for meeting processing and personal knowledge management",
     version="1.0.0",
     lifespan=lifespan
@@ -108,7 +108,7 @@ app.add_middleware(
 async def root():
     """Root endpoint"""
     return {
-        "message": "RovoDev Personal AI Assistant",
+        "message": "Personal AI Assistant",
         "version": "1.0.0",
         "status": "running"
     }
@@ -144,7 +144,7 @@ async def health_check():
 async def status():
     """Detailed status endpoint"""
     return {
-        "application": "RovoDev Personal AI Assistant",
+        "application": "Personal AI Assistant",
         "version": "1.0.0",
         "environment": settings.environment,
         "debug": settings.debug,

@@ -12,8 +12,8 @@ Deploy RovoDev to any Ubuntu 24.04 LTS server in under 30 minutes:
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/yourusername/rovodev.git
-cd rovodev
+git clone https://github.com/mrlivingston719/ai-assistant.git
+cd ai-assistant
 
 # 2. Run automated setup (installs Docker, Ollama, optimizes system)
 chmod +x setup.sh
@@ -160,8 +160,8 @@ The system automatically:
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/rovodev.git
-cd rovodev
+git clone https://github.com/mrlivingston719/ai-assistant.git
+cd ai-assistant
 
 # Create virtual environment
 python -m venv venv
@@ -179,7 +179,7 @@ uvicorn src.main:app --reload --host 0.0.0.0 --port 8080
 ### Project Structure
 
 ```
-rovodev/
+ai-assistant/
 ├── src/                    # Application source code
 │   ├── main.py            # FastAPI application entry point
 │   ├── config.py          # Configuration management
@@ -310,8 +310,8 @@ sudo lsof -i :8080
 
 ### Getting Help
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/rovodev/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/rovodev/discussions)
+- **Issues**: [GitHub Issues](https://github.com/mrlivingston719/ai-assistant/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/mrlivingston719/ai-assistant/discussions)
 - **Documentation**: See `/docs` folder for detailed guides
 
 ## 🗺️ Roadmap

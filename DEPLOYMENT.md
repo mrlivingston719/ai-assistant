@@ -18,15 +18,15 @@ This deployment strategy allows you to:
 
 ```bash
 # Complete deployment in one command
-curl -fsSL https://raw.githubusercontent.com/yourusername/rovodev/main/deploy.sh | bash
+curl -fsSL https://raw.githubusercontent.com/mrlivingston719/ai-assistant/main/deploy.sh | bash
 ```
 
 ### Manual Deployment Steps
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/yourusername/rovodev.git
-cd rovodev
+git clone https://github.com/mrlivingston719/ai-assistant.git
+cd ai-assistant
 
 # 2. Run setup script
 chmod +x setup.sh
@@ -90,9 +90,9 @@ sudo apt update && sudo apt upgrade -y
 sudo apt install -y git curl
 
 # Create deployment user (optional)
-sudo useradd -m -s /bin/bash rovodev
-sudo usermod -aG sudo rovodev
-sudo su - rovodev
+sudo useradd -m -s /bin/bash aiassistant
+sudo usermod -aG sudo aiassistant
+sudo su - aiassistant
 ```
 
 ### Step 2: Clone Repository
@@ -100,8 +100,8 @@ sudo su - rovodev
 ```bash
 # Clone to home directory
 cd ~
-git clone https://github.com/yourusername/rovodev.git
-cd rovodev
+git clone https://github.com/mrlivingston719/ai-assistant.git
+cd ai-assistant
 
 # Verify files
 ls -la
@@ -197,7 +197,7 @@ curl http://localhost:8080/status
 sudo apt install -y nginx
 
 # Create configuration
-sudo nano /etc/nginx/sites-available/rovodev
+sudo nano /etc/nginx/sites-available/ai-assistant
 ```
 
 **Nginx Configuration:**
@@ -224,7 +224,7 @@ server {
 
 ```bash
 # Enable site
-sudo ln -s /etc/nginx/sites-available/rovodev /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/ai-assistant /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl restart nginx
 ```
@@ -259,7 +259,7 @@ sudo ufw --force enable
 ### Updating RovoDev
 
 ```bash
-cd ~/rovodev
+cd ~/ai-assistant
 
 # Pull latest changes
 git pull origin main
@@ -277,44 +277,44 @@ curl http://localhost:8080/health
 
 ```bash
 # Create backup script
-nano ~/backup-rovodev.sh
+nano ~/backup-ai-assistant.sh
 ```
 
 **Backup Script:**
 ```bash
 #!/bin/bash
-BACKUP_DIR="/backup/rovodev/$(date +%Y%m%d_%H%M%S)"
+BACKUP_DIR="/backup/ai-assistant/$(date +%Y%m%d_%H%M%S)"
 mkdir -p "$BACKUP_DIR"
 
 # Backup PostgreSQL
-docker exec rovodev-postgres pg_dump -U rovodev rovodev > "$BACKUP_DIR/postgres.sql"
+docker exec assistant-postgres pg_dump -U assistant assistant > "$BACKUP_DIR/postgres.sql"
 
 # Backup ChromaDB
-docker cp rovodev-chromadb:/chroma/chroma "$BACKUP_DIR/chromadb"
+docker cp assistant-chromadb:/chroma/chroma "$BACKUP_DIR/chromadb"
 
 # Backup environment and configs
-cp ~/rovodev/.env "$BACKUP_DIR/"
-cp ~/rovodev/docker-compose.yml "$BACKUP_DIR/"
+cp ~/ai-assistant/.env "$BACKUP_DIR/"
+cp ~/ai-assistant/docker-compose.yml "$BACKUP_DIR/"
 
 echo "Backup completed: $BACKUP_DIR"
 ```
 
 ```bash
-chmod +x ~/backup-rovodev.sh
+chmod +x ~/backup-ai-assistant.sh
 
 # Schedule daily backups
 crontab -e
-# Add: 0 2 * * * /home/rovodev/backup-rovodev.sh
+# Add: 0 2 * * * /home/aiassistant/backup-ai-assistant.sh
 ```
 
 ### Monitoring and Logs
 
 ```bash
 # System monitoring
-~/rovodev/system-monitor.sh
+~/ai-assistant/system-monitor.sh
 
 # Application logs
-docker compose logs -f rovodev
+docker compose logs -f assistant
 
 # Database logs
 docker compose logs -f postgres
@@ -403,7 +403,7 @@ services:
       resources:
         limits:
           memory: 2G
-  rovodev:
+  assistant:
     deploy:
       resources:
         limits:
@@ -439,7 +439,7 @@ sudo sysctl -p
 
 ```bash
 # Create security hardening script
-nano ~/harden-rovodev.sh
+nano ~/harden-ai-assistant.sh
 ```
 
 **Security Hardening:**

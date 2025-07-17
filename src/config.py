@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     
     # Database
     database_url: str = Field(
-        default="postgresql://rovodev:password@localhost:5432/rovodev",
+        default="postgresql://assistant:password@localhost:5432/assistant",
         description="PostgreSQL database URL"
     )
     
