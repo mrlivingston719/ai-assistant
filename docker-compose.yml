@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: rovodev-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: rovodev
+      POSTGRES_USER: rovodev
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rovodev -d rovodev"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - rovodev-network
+
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: rovodev-chromadb
+    restart: unless-stopped
+    environment:
+      - CHROMA_SERVER_HOST=0.0.0.0
+      - CHROMA_SERVER_HTTP_PORT=8000
+    volumes:
+      - chroma_data:/chroma/chroma
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - rovodev-network
+
+  rovodev:
+    build: .
+    container_name: rovodev-api
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgresql://rovodev:${POSTGRES_PASSWORD}@postgres:5432/rovodev
+      - CHROMADB_URL=http://chromadb:8000
+      - OLLAMA_URL=http://host.docker.internal:11434
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - NOTION_TOKEN=${NOTION_TOKEN}
+      - GMAIL_CREDENTIALS=${GMAIL_CREDENTIALS}
+    volumes:
+      - ./src:/app/src
+      - ./logs:/app/logs
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      chromadb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - rovodev-network
+
+volumes:
+  postgres_data:
+  chroma_data:
+
+networks:
+  rovodev-network:
+    driver: bridge

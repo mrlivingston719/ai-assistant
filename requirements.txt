@@ -1,0 +1,52 @@
+# FastAPI and web framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# Database
+sqlalchemy==2.0.23
+alembic==1.13.1
+psycopg2-binary==2.9.9
+
+# Vector database
+chromadb==0.4.18
+
+# AI/ML
+ollama==0.1.7
+numpy==1.24.3
+
+# Telegram bot
+python-telegram-bot==20.7
+
+# API integrations
+requests==2.31.0
+aiohttp==3.9.1
+
+# Notion API
+notion-client==2.2.1
+
+# Gmail API
+google-api-python-client==2.108.0
+google-auth-httplib2==0.1.1
+google-auth-oauthlib==1.1.0
+
+# Utilities
+python-dotenv==1.0.0
+python-multipart==0.0.6
+email-validator==2.1.0
+python-dateutil==2.8.2
+pytz==2023.3
+
+# Logging and monitoring
+structlog==23.2.0
+
+# Development
+pytest==7.4.3
+pytest-asyncio==0.21.1
+black==23.11.0
+isort==5.12.0
+flake8==6.1.0
+
+# Calendar file generation
+icalendar==5.0.11
