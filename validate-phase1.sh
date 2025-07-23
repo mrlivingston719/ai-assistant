@@ -175,14 +175,19 @@ main() {
     
     # Ollama Health
     print_test "Ollama service"
-    if curl -s -f http://localhost:11434/api/tags >/dev/null 2>&1; then
-        print_pass "Ollama service responding"
-        local model_count
-        model_count=$(curl -s http://localhost:11434/api/tags 2>/dev/null | jq '.models | length' 2>/dev/null || echo "0")
-        print_info "Available models: $model_count"
+    if command -v ollama >/dev/null 2>&1; then
+        if curl -s -f http://localhost:11434/api/tags >/dev/null 2>&1; then
+            print_pass "Ollama service responding"
+            local model_count
+            model_count=$(curl -s http://localhost:11434/api/tags 2>/dev/null | jq '.models | length' 2>/dev/null || echo "0")
+            print_info "Available models: $model_count"
+        else
+            print_fail "Ollama installed but not responding"
+            print_info "Try: systemctl start ollama"
+        fi
     else
-        print_fail "Ollama service not responding"
-        print_info "Check: systemctl status ollama"
+        print_fail "Ollama not installed (required for Phase 1 Week 1)"
+        print_info "Install with: curl -fsSL https://ollama.ai/install.sh | sh"
     fi
     
     # ========================================
@@ -231,21 +236,21 @@ main() {
         print_test "Qwen2.5-14B model available"
         if ollama list 2>/dev/null | grep -q "qwen2.5:14b"; then
             print_pass "Qwen2.5-14B model is available"
+            
+            # Test basic model response
+            print_test "Ollama model response test"
+            if timeout 30 ollama run qwen2.5:14b "Hello" >/dev/null 2>&1; then
+                print_pass "Ollama model responding"
+            else
+                print_fail "Ollama model not responding or timeout"
+            fi
         else
-            print_fail "Qwen2.5-14B model not found"
-            print_info "Run: ollama pull qwen2.5:14b"
-        fi
-        
-        # Test basic model response
-        print_test "Ollama model response test"
-        if timeout 30 ollama run qwen2.5:14b "Hello" >/dev/null 2>&1; then
-            print_pass "Ollama model responding"
-        else
-            print_fail "Ollama model not responding or timeout"
+            print_fail "Qwen2.5-14B model not found (required for Phase 1 Week 1)"
+            print_info "Download with: ollama pull qwen2.5:14b"
         fi
     else
-        print_fail "Ollama command not available"
-        print_info "Ollama may not be installed or not in PATH"
+        print_fail "Ollama not installed - cannot test model"
+        print_info "Install Ollama first, then download model"
     fi
     
     # ========================================
