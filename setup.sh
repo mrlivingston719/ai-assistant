@@ -266,9 +266,6 @@ main() {
     
     echo ""
     
-    # Update system first
-    update_system
-    
     # Configure security
     configure_security
     
