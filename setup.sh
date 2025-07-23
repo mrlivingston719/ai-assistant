@@ -306,14 +306,8 @@ main() {
     # Pull Ollama model
     echo "🤖 Checking Ollama model..."
     if ! ollama list | grep -q "qwen2.5:14b"; then
-        echo "📥 Qwen2.5:14b model not found. This will download ~8GB..."
-        read -p "Continue with model download? (y/N): " -n 1 -r
-        echo
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            pull_ollama_model
-        else
-            echo "⚠️  Skipping model download. You can run 'ollama pull qwen2.5:14b' later"
-        fi
+        echo "📥 Qwen2.5:14b model not found. Downloading automatically (~8GB)..."
+        pull_ollama_model
     else
         echo "✅ Qwen2.5:14b model already available"
     fi
