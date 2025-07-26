@@ -48,7 +48,6 @@ services:
       - OLLAMA_URL=http://host.docker.internal:11434
       - SIGNAL_PHONE_NUMBER=${SIGNAL_PHONE_NUMBER}
       - NOTION_TOKEN=${NOTION_TOKEN}
-      - GMAIL_CREDENTIALS=${GMAIL_CREDENTIALS}
     volumes:
       - ./src:/app/src  # Development only - remove in production
       - ./logs:/app/logs

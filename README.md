@@ -110,7 +110,7 @@ Required environment variables:
 - `SIGNAL_PHONE_NUMBER`: Your Signal phone number (e.g., +1234567890)
 - `POSTGRES_PASSWORD`: Secure password for PostgreSQL
 - `NOTION_TOKEN`: (Optional) Notion integration token
-- `GMAIL_CREDENTIALS`: (Optional) Gmail API credentials
+- Note: Gmail integration removed - using Signal "Note to Self" only
 
 ### 3. Start Services
 

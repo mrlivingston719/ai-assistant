@@ -83,11 +83,8 @@ class Settings(BaseSettings):
         description="Notion integration token"
     )
     
-    # Gmail
-    gmail_credentials: Optional[str] = Field(
-        default=None,
-        description="Gmail API credentials JSON"
-    )
+    # Gmail integration removed - using Signal "Note to Self" only
+    # gmail_credentials: Removed in favor of Signal integration
     
     # Calendar settings
     default_reminder_minutes: int = Field(

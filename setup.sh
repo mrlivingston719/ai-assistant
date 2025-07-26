@@ -283,7 +283,7 @@ setup_environment() {
         echo ""
         echo "Optional: You can add these later:"
         echo "   - NOTION_TOKEN=... (for Notion integration)"
-        echo "   - GMAIL_CREDENTIALS=... (for Gmail integration)"
+        echo "   - Note: Gmail integration removed - using Signal 'Note to Self' only"
         echo ""
         
     else

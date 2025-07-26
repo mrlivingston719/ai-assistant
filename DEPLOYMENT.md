@@ -71,7 +71,7 @@ curl http://localhost:8080/health
 ### 2. API Tokens Ready
 - [ ] Signal phone number configured
 - [ ] Notion Integration Token (optional)
-- [ ] Gmail API Credentials (optional)
+- [ ] Note: Gmail integration removed - using Signal "Note to Self" only
 
 ### 3. Domain/Network Setup (Optional)
 - [ ] Domain name configured
@@ -143,7 +143,7 @@ SIGNAL_PHONE_NUMBER=+1234567890
 
 # Optional integrations
 NOTION_TOKEN=your_notion_token
-GMAIL_CREDENTIALS={"type":"service_account",...}
+# Note: Gmail integration removed - using Signal "Note to Self" only
 
 # Application settings
 LOG_LEVEL=INFO
