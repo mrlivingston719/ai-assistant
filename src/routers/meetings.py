@@ -3,20 +3,20 @@ Meeting management endpoints
 """
 
 from fastapi import APIRouter, HTTPException, Depends
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from typing import List, Optional
 from datetime import datetime, timedelta
 import logging
 
-from ..database import get_db, Meeting, ActionItem
+from ..database import get_db_session
+from ..models import Meeting, ActionItem
+from ..main import get_meeting_processor, get_calendar_service
 from ..services.meeting_processor import MeetingProcessor
 from ..services.calendar_service import CalendarService
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
-
-meeting_processor = MeetingProcessor()
-calendar_service = CalendarService()
 
 
 @router.get("/")
@@ -24,22 +24,24 @@ async def get_meetings(
     skip: int = 0, 
     limit: int = 10, 
     meeting_type: Optional[str] = None,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db_session)
 ):
     """Get list of meetings"""
-    query = db.query(Meeting)
+    query = select(Meeting)
     
     if meeting_type:
-        query = query.filter(Meeting.meeting_type == meeting_type)
+        query = query.where(Meeting.meeting_type == meeting_type)
     
-    meetings = query.offset(skip).limit(limit).all()
+    query = query.offset(skip).limit(limit)
+    result = await db.execute(query)
+    meetings = result.scalars().all()
     
     return {
         "meetings": [
             {
                 "id": m.id,
                 "title": m.title,
-                "meeting_date": m.meeting_date.isoformat(),
+                "meeting_date": m.meeting_date.isoformat() if m.meeting_date else None,
                 "meeting_type": m.meeting_type,
                 "processed": m.processed,
                 "created_at": m.created_at.isoformat()
@@ -50,15 +52,19 @@ async def get_meetings(
 
 
 @router.get("/{meeting_id}")
-async def get_meeting(meeting_id: int, db: Session = Depends(get_db)):
+async def get_meeting(meeting_id: int, db: AsyncSession = Depends(get_db_session)):
     """Get specific meeting details"""
-    meeting = db.query(Meeting).filter(Meeting.id == meeting_id).first()
+    query = select(Meeting).where(Meeting.id == meeting_id)
+    result = await db.execute(query)
+    meeting = result.scalar_one_or_none()
     
     if not meeting:
         raise HTTPException(status_code=404, detail="Meeting not found")
     
     # Get associated action items
-    action_items = db.query(ActionItem).filter(ActionItem.meeting_id == meeting_id).all()
+    ai_query = select(ActionItem).where(ActionItem.meeting_id == meeting_id)
+    ai_result = await db.execute(ai_query)
+    action_items = ai_result.scalars().all()
     
     return {
         "meeting": {
@@ -94,7 +100,8 @@ async def process_meeting_content(
     content: str,
     title: Optional[str] = None,
     meeting_type: Optional[str] = "general",
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db_session),
+    meeting_processor: MeetingProcessor = Depends(get_meeting_processor)
 ):
     """Process meeting content and extract action items"""
     try:
@@ -119,14 +126,18 @@ async def process_meeting_content(
 
 
 @router.get("/{meeting_id}/action-items")
-async def get_meeting_action_items(meeting_id: int, db: Session = Depends(get_db)):
+async def get_meeting_action_items(meeting_id: int, db: AsyncSession = Depends(get_db_session)):
     """Get action items for a specific meeting"""
-    meeting = db.query(Meeting).filter(Meeting.id == meeting_id).first()
+    query = select(Meeting).where(Meeting.id == meeting_id)
+    result = await db.execute(query)
+    meeting = result.scalar_one_or_none()
     
     if not meeting:
         raise HTTPException(status_code=404, detail="Meeting not found")
     
-    action_items = db.query(ActionItem).filter(ActionItem.meeting_id == meeting_id).all()
+    ai_query = select(ActionItem).where(ActionItem.meeting_id == meeting_id)
+    ai_result = await db.execute(ai_query)
+    action_items = ai_result.scalars().all()
     
     return {
         "meeting_id": meeting_id,
@@ -149,19 +160,27 @@ async def get_meeting_action_items(meeting_id: int, db: Session = Depends(get_db
 
 
 @router.post("/{meeting_id}/generate-calendar")
-async def generate_calendar_files(meeting_id: int, db: Session = Depends(get_db)):
+async def generate_calendar_files(
+    meeting_id: int, 
+    db: AsyncSession = Depends(get_db_session),
+    calendar_service: CalendarService = Depends(get_calendar_service)
+):
     """Generate .ics calendar files for meeting action items"""
     try:
-        meeting = db.query(Meeting).filter(Meeting.id == meeting_id).first()
+        query = select(Meeting).where(Meeting.id == meeting_id)
+        result = await db.execute(query)
+        meeting = result.scalar_one_or_none()
         
         if not meeting:
             raise HTTPException(status_code=404, detail="Meeting not found")
         
-        action_items = db.query(ActionItem).filter(
+        ai_query = select(ActionItem).where(
             ActionItem.meeting_id == meeting_id,
             ActionItem.status == "pending",
             ActionItem.due_date.isnot(None)
-        ).all()
+        )
+        ai_result = await db.execute(ai_query)
+        action_items = ai_result.scalars().all()
         
         if not action_items:
             return {"message": "No pending action items with due dates found"}
@@ -197,7 +216,7 @@ async def generate_calendar_files(meeting_id: int, db: Session = Depends(get_db)
 async def search_meetings(
     query: str,
     limit: int = 5,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db_session)
 ):
     """Search meetings using vector similarity"""
     try:
@@ -214,13 +233,15 @@ async def search_meetings(
         for result in results:
             meeting_id = result["metadata"].get("meeting_id")
             if meeting_id:
-                meeting = db.query(Meeting).filter(Meeting.id == meeting_id).first()
+                meeting_query = select(Meeting).where(Meeting.id == meeting_id)
+                meeting_result = await db.execute(meeting_query)
+                meeting = meeting_result.scalar_one_or_none()
                 if meeting:
                     meeting_details.append({
                         "meeting": {
                             "id": meeting.id,
                             "title": meeting.title,
-                            "meeting_date": meeting.meeting_date.isoformat(),
+                            "meeting_date": meeting.meeting_date.isoformat() if meeting.meeting_date else None,
                             "meeting_type": meeting.meeting_type
                         },
                         "relevance_score": 1.0 - result["distance"],  # Convert distance to similarity

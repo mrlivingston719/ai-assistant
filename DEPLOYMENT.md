@@ -69,7 +69,7 @@ curl http://localhost:8080/health
 - [ ] Internet connectivity
 
 ### 2. API Tokens Ready
-- [ ] Telegram Bot Token (from @BotFather)
+- [ ] Signal phone number configured
 - [ ] Notion Integration Token (optional)
 - [ ] Gmail API Credentials (optional)
 
@@ -138,8 +138,8 @@ nano .env
 # Database
 POSTGRES_PASSWORD=your_secure_password_here
 
-# Telegram Bot
-TELEGRAM_BOT_TOKEN=your_telegram_bot_token
+# Signal Integration
+SIGNAL_PHONE_NUMBER=+1234567890
 
 # Optional integrations
 NOTION_TOKEN=your_notion_token
@@ -214,11 +214,8 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
-    location /webhook/telegram {
-        proxy_pass http://localhost:8080/webhook/telegram;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
+    # Signal uses local communication - no webhook needed
+    # All Signal integration is handled via signal-cli locally
 }
 ```
 

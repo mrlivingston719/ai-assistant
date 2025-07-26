@@ -25,13 +25,15 @@ class VectorStore:
         """Initialize ChromaDB client and collections"""
         try:
             # Create ChromaDB client
+            # Parse the ChromaDB URL to get host and port
+            import urllib.parse
+            parsed_url = urllib.parse.urlparse(settings.chromadb_url)
+            host = parsed_url.hostname or "localhost"
+            port = parsed_url.port or settings.chromadb_port
+            
             self.client = chromadb.HttpClient(
-                host=settings.chromadb_url.replace("http://", "").replace("https://", ""),
-                port=8000,
-                settings=ChromaSettings(
-                    chroma_client_auth_provider="chromadb.auth.token.TokenAuthClientProvider",
-                    chroma_client_auth_credentials=""
-                )
+                host=host,
+                port=port
             )
             
             # Create or get collections
@@ -246,6 +248,54 @@ class VectorStore:
             logger.error("Failed to store conversation in vector database", error=str(e))
             raise
     
+    async def search_similar(self, query: str, limit: int = 5, filter_type: str = "meeting") -> List[Dict[str, Any]]:
+        """Search for similar content across all collections"""
+        try:
+            if filter_type == "meeting":
+                return await self.search_similar_meetings(query, user_id=1, limit=limit)
+            elif filter_type == "action_item":
+                return await self.search_similar_action_items(query, user_id=1, limit=limit)
+            else:
+                # Search both collections and merge results
+                meetings = await self.search_similar_meetings(query, user_id=1, limit=limit//2)
+                actions = await self.search_similar_action_items(query, user_id=1, limit=limit//2)
+                return meetings + actions
+                
+        except Exception as e:
+            logger.error("Failed to search similar content", error=str(e))
+            return []
+    
+    async def get_meeting_context(self, query: str, limit: int = 3) -> str:
+        """Get relevant meeting context for answering user queries"""
+        try:
+            # Search for relevant meetings
+            similar_meetings = await self.search_similar_meetings(query, user_id=1, limit=limit)
+            
+            if not similar_meetings:
+                return "No relevant meeting context found."
+            
+            # Format context
+            context_parts = []
+            for i, meeting in enumerate(similar_meetings, 1):
+                content = meeting.get('content', '')
+                metadata = meeting.get('metadata', {})
+                
+                # Truncate content if too long
+                if len(content) > 500:
+                    content = content[:500] + "..."
+                
+                context_part = f"Meeting {i}:\n{content}"
+                if metadata.get('meeting_type'):
+                    context_part = f"Meeting {i} ({metadata['meeting_type']}):\n{content}"
+                
+                context_parts.append(context_part)
+            
+            return "\n\n".join(context_parts)
+            
+        except Exception as e:
+            logger.error("Failed to get meeting context", error=str(e))
+            return "No relevant meeting context found."
+
     async def close(self):
         """Close vector store connection"""
         # ChromaDB HTTP client doesn't need explicit closing

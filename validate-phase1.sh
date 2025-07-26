@@ -206,11 +206,11 @@ main() {
             print_fail "PostgreSQL password not configured or using default"
         fi
         
-        print_test "Telegram bot token configured"
-        if grep -q "TELEGRAM_BOT_TOKEN=" .env && ! grep -q "TELEGRAM_BOT_TOKEN=your_telegram_bot_token" .env; then
-            print_pass "Telegram bot token is configured"
+        print_test "Signal phone number configured"
+        if grep -q "SIGNAL_PHONE_NUMBER=" .env && ! grep -q "SIGNAL_PHONE_NUMBER=your_signal_number" .env; then
+            print_pass "Signal phone number is configured"
         else
-            print_fail "Telegram bot token not configured or using default"
+            print_fail "Signal phone number not configured or using default"
         fi
     fi
     
@@ -296,8 +296,8 @@ main() {
         echo -e "${GREEN}Phase 1 Week 1 foundation is ready!${NC}"
         echo ""
         echo -e "${BLUE}Next Steps:${NC}"
-        echo "1. Configure Telegram bot token in .env"
-        echo "2. Test Telegram bot functionality"
+        echo "1. Configure Signal phone number in .env"
+        echo "2. Test Signal integration functionality"
         echo "3. Begin Phase 1 Week 2 development"
         exit 0
     elif [ $success_rate -ge 80 ]; then

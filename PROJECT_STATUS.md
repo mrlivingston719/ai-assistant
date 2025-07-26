@@ -37,7 +37,7 @@
 - ✅ Complete project structure with modular services
 - ✅ Docker containerization (3-container architecture)
 - ✅ FastAPI application with health checks
-- ✅ Telegram bot service with file attachment support
+- ✅ Signal bot service with secure "Note to Self" communication
 - ✅ iOS Calendar integration with smart reminder logic
 - ✅ Vector database integration (ChromaDB) for semantic search
 - ✅ Database models and API integrations ready

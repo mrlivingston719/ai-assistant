@@ -27,7 +27,11 @@ chmod +x setup.sh
 ollama pull qwen2.5:14b
 
 # 5. Start the application
+# Development mode:
 docker compose up -d
+
+# Production mode (recommended for servers):
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 # 6. Verify deployment
 curl http://localhost:8080/health
@@ -39,7 +43,7 @@ curl http://localhost:8080/health
 
 - **📝 Meeting Processing**: Automatically processes meeting transcripts from TwinMind
 - **🤖 AI-Powered Analysis**: Extracts action items, summaries, and insights using local LLM
-- **📱 Telegram Interface**: Chat with your AI assistant via Telegram
+- **📱 Signal Interface**: Chat with your AI assistant via Signal "Note to Self" with E2E encryption
 - **📅 Smart Reminders**: Generates iOS calendar files with intelligent timing
 - **🔍 Semantic Search**: Find relevant meetings and context using vector search
 - **🔒 Privacy-First**: All sensitive data processed locally, never sent to cloud
@@ -49,7 +53,7 @@ curl http://localhost:8080/health
 **3-Container Setup:**
 - **PostgreSQL**: Structured data (meetings, action items, users)
 - **ChromaDB**: Vector embeddings for semantic search
-- **FastAPI**: Main application with Telegram bot integration
+- **FastAPI**: Main application with Signal bot integration
 
 **Local AI Processing:**
 - **Ollama + Qwen2.5-14B**: Local LLM for text processing (no cloud dependency)
@@ -97,7 +101,7 @@ nano .env
 ```
 
 Required environment variables:
-- `TELEGRAM_BOT_TOKEN`: Your Telegram bot token
+- `SIGNAL_PHONE_NUMBER`: Your Signal phone number (e.g., +1234567890)
 - `POSTGRES_PASSWORD`: Secure password for PostgreSQL
 - `NOTION_TOKEN`: (Optional) Notion integration token
 - `GMAIL_CREDENTIALS`: (Optional) Gmail API credentials
@@ -113,21 +117,17 @@ docker compose ps
 curl http://localhost:8080/health
 ```
 
-## 📱 Setup Telegram Bot
+## 📱 Setup Signal Integration
 
-1. **Create Bot**: Message [@BotFather](https://t.me/botfather) on Telegram
-2. **Get Token**: Use `/newbot` command and save the token
-3. **Configure Webhook** (Optional):
-   ```bash
-   curl -X POST "https://api.telegram.org/bot<YOUR_TOKEN>/setWebhook" \
-        -H "Content-Type: application/json" \
-        -d '{"url": "https://yourdomain.com/webhook/telegram"}'
-   ```
+1. **Install Signal CLI**: Already included in automated setup
+2. **Link Device**: The setup script guides you through device linking
+3. **Phone Number**: Provide your Signal phone number during configuration
+4. **"Note to Self"**: Send meeting notes to yourself in Signal
 
 ## 🔍 Usage Examples
 
 ### Process a Meeting
-Send meeting transcript to your Telegram bot:
+Send meeting transcript to yourself in Signal (Note to Self):
 ```
 Hey, here's my meeting transcript from today:
 
@@ -152,7 +152,7 @@ The system automatically:
 - Creates .ics calendar files
 - Sets 15-minute default reminders
 - Adds travel time buffers
-- Sends via email or Telegram
+- Sends via Signal "Note to Self"
 
 ## 🛠️ Development
 
@@ -319,7 +319,7 @@ sudo lsof -i :8080
 ### Phase 1: Core MVP ✅
 - [x] 3-container architecture
 - [x] Meeting processing pipeline
-- [x] Telegram bot integration
+- [x] Signal "Note to Self" integration with E2E encryption
 - [x] Vector search capabilities
 - [x] iOS calendar integration
 

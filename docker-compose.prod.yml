@@ -1,0 +1,29 @@
+version: '3.8'
+
+# Production overrides for docker-compose.yml
+# Usage: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+services:
+  assistant:
+    # Remove development source code mount
+    volumes:
+      - ./logs:/app/logs
+      - signal_cli_data:/root/.local/share/signal-cli
+      # Removed: - ./src:/app/src (development only)
+    
+    # Production environment settings
+    environment:
+      - ENVIRONMENT=production
+      - DEBUG=false
+      - LOG_LEVEL=INFO
+    
+    # Restart policy for production stability
+    restart: unless-stopped
+    
+    # Production health check with tighter constraints
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s

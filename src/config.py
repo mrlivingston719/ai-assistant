@@ -58,6 +58,10 @@ class Settings(BaseSettings):
         default=None,
         description="Your Signal phone number (e.g., +1234567890)"
     )
+    signal_cli_path: str = Field(
+        default="/usr/local/bin/signal-cli",
+        description="Path to signal-cli executable"
+    )
     
     def validate_signal_config(self) -> bool:
         """Validate Signal configuration"""
@@ -72,10 +76,6 @@ class Settings(BaseSettings):
         if not re.match(r'^\+\d{10,15}$', self.signal_phone_number):
             return False
         return True
-    signal_cli_path: str = Field(
-        default="/usr/local/bin/signal-cli",
-        description="Path to signal-cli executable"
-    )
     
     # Notion
     notion_token: Optional[str] = Field(
