@@ -59,6 +59,12 @@ curl http://localhost:8080/health
 - **Ollama + Qwen2.5-14B**: Local LLM for text processing (no cloud dependency)
 - **ChromaDB**: Vector database for semantic search and context
 
+**Simplified Design Philosophy:**
+- **Direct Service Initialization**: No complex dependency injection - services created directly in main.py
+- **Basic Error Handling**: Simple try/catch blocks instead of custom exception hierarchies
+- **Minimal Infrastructure**: Essential components only, appropriate for personal tools
+- **Clean Architecture**: Easy to understand and maintain codebase
+
 ## 📋 Requirements
 
 ### Hardware (Recommended)
@@ -181,13 +187,19 @@ uvicorn src.main:app --reload --host 0.0.0.0 --port 8080
 ```
 ai-assistant/
 ├── src/                    # Application source code
-│   ├── main.py            # FastAPI application entry point
+│   ├── main.py            # FastAPI app with simplified service initialization
 │   ├── config.py          # Configuration management
 │   ├── models.py          # Database models
 │   ├── database.py        # Database connection
 │   ├── vector_store.py    # ChromaDB integration
+│   ├── signal_bot.py      # Signal "Note to Self" integration
 │   ├── routers/           # API route handlers
+│   │   ├── meetings.py    # Meeting management endpoints
+│   │   └── signal.py      # Signal integration endpoints
 │   └── services/          # Business logic services
+│       ├── meeting_processor.py  # AI-powered meeting processing
+│       ├── signal_service.py     # Signal CLI integration
+│       └── calendar_service.py   # iOS calendar generation
 ├── docker-compose.yml     # Container orchestration
 ├── Dockerfile            # Application container
 ├── requirements.txt      # Python dependencies

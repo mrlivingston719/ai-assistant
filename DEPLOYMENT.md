@@ -124,7 +124,7 @@ exit
 ### Step 4: Environment Configuration
 
 ```bash
-cd ~/rovodev
+cd ~/ai-assistant
 
 # Copy environment template
 cp .env.example .env
@@ -253,7 +253,7 @@ sudo ufw --force enable
 
 ## 🔄 Updates and Maintenance
 
-### Updating RovoDev
+### Updating Personal AI Assistant
 
 ```bash
 cd ~/ai-assistant
@@ -442,7 +442,7 @@ nano ~/harden-ai-assistant.sh
 **Security Hardening:**
 ```bash
 #!/bin/bash
-# Basic security hardening for RovoDev
+# Basic security hardening for Personal AI Assistant
 
 # Update system
 sudo apt update && sudo apt upgrade -y
@@ -473,4 +473,4 @@ echo "Security hardening completed"
 
 ---
 
-**This deployment guide ensures RovoDev can be reliably deployed to any Ubuntu server with minimal manual intervention while maintaining security and performance best practices.**
+**This deployment guide ensures the Personal AI Assistant can be reliably deployed to any Ubuntu server with minimal manual intervention while maintaining security and performance best practices. The simplified architecture makes deployment, maintenance, and troubleshooting straightforward for personal use.**
