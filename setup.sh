@@ -15,33 +15,7 @@ command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
-# Function to install Signal CLI
-install_signal_cli() {
-    echo "📱 Installing Signal CLI..."
-    
-    # Install Java (required for signal-cli)
-    if ! command_exists java; then
-        echo "Installing Java 17..."
-        sudo apt install -y openjdk-17-jre
-    fi
-    
-    # Download and install signal-cli
-    cd /tmp
-    SIGNAL_CLI_VERSION="0.12.8"
-    wget "https://github.com/AsamK/signal-cli/releases/download/v${SIGNAL_CLI_VERSION}/signal-cli-${SIGNAL_CLI_VERSION}.tar.gz"
-    tar xf signal-cli-*.tar.gz
-    sudo mv signal-cli-* /opt/signal-cli
-    sudo ln -sf /opt/signal-cli/bin/signal-cli /usr/local/bin/
-    
-    # Verify installation
-    if command_exists signal-cli; then
-        echo "✅ Signal CLI installed successfully"
-        echo "📱 Version: $(signal-cli --version)"
-    else
-        echo "❌ Signal CLI installation failed"
-        exit 1
-    fi
-}
+# Signal CLI is installed inside the Docker container - no host installation needed
 
 # Function to install Ollama
 install_ollama() {
@@ -188,13 +162,8 @@ main() {
     
     echo ""
     
-    # Install Signal CLI if not present
-    if ! command_exists signal-cli; then
-        install_signal_cli
-    else
-        echo "✅ Signal CLI already installed"
-        echo "📱 Version: $(signal-cli --version)"
-    fi
+    # Signal CLI runs inside Docker container
+    echo "✅ Signal CLI will be available inside Docker container"
     
     # Install Ollama if not present
     if ! command_exists ollama; then
@@ -225,22 +194,22 @@ main() {
     echo ""
     echo "🎉 Application setup complete!"
     echo ""
-    echo "✅ Signal CLI installed and ready"
+    echo "✅ Signal CLI ready inside Docker container"
     echo "✅ Ollama configured and running"
     echo "✅ Environment configured"
     echo "✅ Application directories created"
     echo ""
     echo "Next steps:"
     echo ""
-    echo "1. Link Signal device:"
-    echo "   signal-cli link -n \"AI Assistant Server\""
+    echo "1. Start application containers:"
+    echo "   docker compose up -d"
+    echo ""
+    echo "2. Link Signal device (inside container):"
+    echo "   docker exec -it assistant-api signal-cli link -n \"AI Assistant\""
     echo "   # Scan QR code with Signal app"
     echo ""
-    echo "2. Test Signal connection:"
-    echo "   signal-cli -a \$(grep SIGNAL_PHONE_NUMBER .env | cut -d= -f2) send \$(grep SIGNAL_PHONE_NUMBER .env | cut -d= -f2) -m \"Test\""
-    echo ""
-    echo "3. Start application:"
-    echo "   docker compose up -d"
+    echo "3. Test Signal connection (inside container):"
+    echo "   docker exec -it assistant-api signal-cli -a \$(grep SIGNAL_PHONE_NUMBER .env | cut -d= -f2) send \$(grep SIGNAL_PHONE_NUMBER .env | cut -d= -f2) -m \"Test\""
     echo ""
     echo "4. Check health:"
     echo "   curl http://localhost:8080/health"
