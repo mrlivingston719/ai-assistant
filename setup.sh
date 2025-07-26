@@ -15,6 +15,25 @@ command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
+# Function to cleanup previous deployment
+cleanup_previous_deployment() {
+    echo "🧹 Cleaning up previous deployment..."
+    
+    # Stop containers if running
+    docker compose down 2>/dev/null || true
+    
+    # Remove project images to force rebuild
+    echo "Removing old container images..."
+    docker image ls --format "table {{.Repository}}\t{{.Tag}}" | grep "ai-assistant" | awk '{print $1":"$2}' | xargs -r docker image rm 2>/dev/null || true
+    
+    # Prune build cache to ensure fresh build
+    echo "Pruning Docker build cache..."
+    docker builder prune -f >/dev/null 2>&1 || true
+    
+    echo "✅ Previous deployment cleaned up"
+    echo ""
+}
+
 # Signal CLI is installed inside the Docker container - no host installation needed
 
 # Function to install Ollama
@@ -140,6 +159,9 @@ main() {
     echo "Checking prerequisites..."
     echo ""
     
+    # Cleanup any previous deployment first
+    cleanup_previous_deployment
+    
     # Check if Docker is available
     if ! command_exists docker; then
         echo "❌ Docker not found. Please install Docker first:"
@@ -205,11 +227,11 @@ main() {
     echo "   docker compose up -d"
     echo ""
     echo "2. Link Signal device (inside container):"
-    echo "   docker exec -it assistant-api signal-cli link -n \"AI Assistant\""
+    echo "   docker exec -it ai-assistant-api signal-cli link -n \"AI Assistant\""
     echo "   # Scan QR code with Signal app"
     echo ""
     echo "3. Test Signal connection (inside container):"
-    echo "   docker exec -it assistant-api signal-cli -a \$(grep SIGNAL_PHONE_NUMBER .env | cut -d= -f2) send \$(grep SIGNAL_PHONE_NUMBER .env | cut -d= -f2) -m \"Test\""
+    echo "   docker exec -it ai-assistant-api signal-cli -a \$(grep SIGNAL_PHONE_NUMBER .env | cut -d= -f2) send \$(grep SIGNAL_PHONE_NUMBER .env | cut -d= -f2) -m \"Test\""
     echo ""
     echo "4. Check health:"
     echo "   curl http://localhost:8080/health"

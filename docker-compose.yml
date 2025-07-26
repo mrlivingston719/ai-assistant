@@ -38,9 +38,9 @@ services:
     networks:
       - assistant-network
 
-  assistant:
+  api:
     build: .
-    container_name: assistant-api
+    container_name: ai-assistant-api
     restart: unless-stopped
     environment:
       - DATABASE_URL=postgresql://assistant:${POSTGRES_PASSWORD}@postgres:5432/assistant
