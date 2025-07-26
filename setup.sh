@@ -346,10 +346,7 @@ main() {
     fi
     
     echo ""
-    
-    # Update system packages first
-    update_system
-    
+      
     # Configure security
     configure_security
     
