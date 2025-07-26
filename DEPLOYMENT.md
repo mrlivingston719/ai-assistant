@@ -71,7 +71,6 @@ curl http://localhost:8080/health
 ### 2. API Tokens Ready
 - [ ] Signal phone number configured
 - [ ] Notion Integration Token (optional)
-- [ ] Note: Gmail integration removed - using Signal "Note to Self" only
 
 ### 3. Domain/Network Setup (Optional)
 - [ ] Domain name configured

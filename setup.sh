@@ -25,40 +25,6 @@ if [[ "$UBUNTU_VERSION" != "24.04" ]]; then
     fi
 fi
 
-# Function to check if command exists
-command_exists() {
-    command -v "$1" >/dev/null 2>&1
-}
-
-# Function to update system
-update_system() {
-    echo "📦 Updating system packages..."
-    
-    sudo apt update && sudo apt upgrade -y
-    
-    # Install essential packages
-    sudo apt install -y \
-        curl \
-        wget \
-        git \
-        vim \
-        htop \
-        unzip \
-        software-properties-common \
-        apt-transport-https \
-        ca-certificates \
-        gnupg \
-        lsb-release \
-        ufw \
-        fail2ban \
-        iotop \
-        nethogs \
-        ncdu \
-        tree \
-        openssl
-    
-    echo "✅ System updated successfully"
-}
 
 # Function to configure security
 configure_security() {
