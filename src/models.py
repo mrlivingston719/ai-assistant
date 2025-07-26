@@ -11,46 +11,28 @@ from typing import Optional
 
 Base = declarative_base()
 
-class User(Base):
-    """User model for Telegram users"""
-    __tablename__ = "users"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    telegram_id = Column(Integer, unique=True, index=True, nullable=False)
-    username = Column(String(255), nullable=True)
-    first_name = Column(String(255), nullable=True)
-    last_name = Column(String(255), nullable=True)
-    is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    
-    # Settings
-    default_reminder_minutes = Column(Integer, default=15)
-    timezone = Column(String(50), default="UTC")
-    
-    # Relationships
-    meetings = relationship("Meeting", back_populates="user")
-    action_items = relationship("ActionItem", back_populates="user")
+# User model removed - using chat_id based approach for Signal integration
 
 class Meeting(Base):
     """Meeting model for processed meetings"""
     __tablename__ = "meetings"
     
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    chat_id = Column(String(255), nullable=False)  # Signal phone number or Telegram chat ID
     
     # Meeting metadata
     title = Column(String(500), nullable=True)
-    date = Column(DateTime(timezone=True), nullable=True)
-    participants = Column(JSON, nullable=True)  # List of participant names
+    meeting_date = Column(DateTime(timezone=True), nullable=True)
+    participants = Column(String(1000), nullable=True)  # Comma-separated participant names
     meeting_type = Column(String(100), nullable=True)  # work, personal, etc.
     
     # Content
-    transcript = Column(Text, nullable=False)
+    content = Column(Text, nullable=False)  # Meeting content/transcript
     summary = Column(Text, nullable=True)
+    processed = Column(Boolean, default=False)
     
     # Source information
-    source = Column(String(100), default="telegram")  # telegram, email, etc.
+    source = Column(String(100), default="signal")  # signal, email, etc.
     source_id = Column(String(255), nullable=True)  # email ID, message ID, etc.
     
     # Vector storage reference
@@ -61,7 +43,6 @@ class Meeting(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
     # Relationships
-    user = relationship("User", back_populates="meetings")
     action_items = relationship("ActionItem", back_populates="meeting")
 
 class ActionItem(Base):
@@ -69,8 +50,8 @@ class ActionItem(Base):
     __tablename__ = "action_items"
     
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     meeting_id = Column(Integer, ForeignKey("meetings.id"), nullable=True)
+    chat_id = Column(String(255), nullable=False)  # Signal phone number or Telegram chat ID
     
     # Action item details
     title = Column(String(500), nullable=False)
@@ -86,6 +67,7 @@ class ActionItem(Base):
     calendar_file_sent = Column(Boolean, default=False)
     reminder_minutes = Column(Integer, nullable=True)
     requires_travel = Column(Boolean, default=False)
+    travel_time_minutes = Column(Integer, default=0)
     
     # Notion integration
     notion_page_id = Column(String(255), nullable=True)
@@ -98,7 +80,6 @@ class ActionItem(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
     # Relationships
-    user = relationship("User", back_populates="action_items")
     meeting = relationship("Meeting", back_populates="action_items")
 
 class Conversation(Base):
@@ -106,11 +87,13 @@ class Conversation(Base):
     __tablename__ = "conversations"
     
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    chat_id = Column(String(255), nullable=False)  # Signal phone number or Telegram chat ID
     
     # Message details
-    message_type = Column(String(20), nullable=False)  # user, assistant, system
-    content = Column(Text, nullable=False)
+    user_message = Column(Text, nullable=True)
+    bot_response = Column(Text, nullable=True)
+    message_type = Column(String(20), nullable=False)  # query, meeting, system
+    processing_time = Column(Integer, nullable=True)  # Processing time in seconds
     
     # Context
     context_meetings = Column(JSON, nullable=True)  # List of meeting IDs used for context
@@ -126,7 +109,7 @@ class ProcessingJob(Base):
     __tablename__ = "processing_jobs"
     
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    chat_id = Column(String(255), nullable=False)  # Signal phone number or chat ID
     
     # Job details
     job_type = Column(String(100), nullable=False)  # meeting_processing, action_extraction, etc.

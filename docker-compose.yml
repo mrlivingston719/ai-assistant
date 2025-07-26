@@ -45,13 +45,14 @@ services:
     environment:
       - DATABASE_URL=postgresql://assistant:${POSTGRES_PASSWORD}@postgres:5432/assistant
       - CHROMADB_URL=http://chromadb:8000
-      - OLLAMA_URL=http://host.docker.internal:11434
-      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - OLLAMA_URL=http://172.17.0.1:11434
+      - SIGNAL_PHONE_NUMBER=${SIGNAL_PHONE_NUMBER}
       - NOTION_TOKEN=${NOTION_TOKEN}
       - GMAIL_CREDENTIALS=${GMAIL_CREDENTIALS}
     volumes:
       - ./src:/app/src
       - ./logs:/app/logs
+      - signal_cli_data:/root/.local/share/signal-cli
     ports:
       - "8080:8080"
     depends_on:
@@ -63,13 +64,15 @@ services:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
       timeout: 10s
-      retries: 3
+      retries: 5
+      start_period: 60s
     networks:
       - assistant-network
 
 volumes:
   postgres_data:
   chroma_data:
+  signal_cli_data:
 
 networks:
   assistant-network:

@@ -12,9 +12,9 @@ from contextlib import asynccontextmanager
 from .config import settings
 from .database import init_db
 from .vector_store import VectorStore
-from .telegram_bot import TelegramBot
+from .signal_bot import SignalBot, initialize_signal_bot
 from .ollama_client import OllamaClient
-from .routers import health, meetings, telegram
+from .routers import health, meetings, signal
 
 # Configure structured logging
 structlog.configure(
@@ -38,13 +38,13 @@ logger = structlog.get_logger()
 
 # Global instances
 vector_store = None
-telegram_bot = None
+signal_bot = None
 ollama_client = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan manager"""
-    global vector_store, telegram_bot, ollama_client
+    global vector_store, signal_bot, ollama_client
     
     logger.info("Starting RovoDev application")
     
@@ -63,13 +63,20 @@ async def lifespan(app: FastAPI):
         await ollama_client.initialize()
         logger.info("Ollama client initialized")
         
-        # Initialize Telegram bot
-        telegram_bot = TelegramBot(vector_store, ollama_client)
-        await telegram_bot.initialize()
-        logger.info("Telegram bot initialized")
+        # Initialize Signal bot
+        try:
+            signal_bot = await initialize_signal_bot(vector_store, ollama_client)
+            logger.info("Signal bot initialized")
+        except Exception as e:
+            logger.error("Signal bot initialization failed", error=str(e))
+            logger.warning("Continuing without Signal bot - check Signal CLI configuration")
+            signal_bot = None
         
         # Start background tasks
-        asyncio.create_task(telegram_bot.start_polling())
+        if signal_bot:
+            asyncio.create_task(signal_bot.start_monitoring())
+        else:
+            logger.warning("Signal bot not available - no message monitoring")
         
         logger.info("RovoDev application started successfully")
         
@@ -81,8 +88,8 @@ async def lifespan(app: FastAPI):
     
     # Cleanup
     logger.info("Shutting down RovoDev application")
-    if telegram_bot:
-        await telegram_bot.stop()
+    if signal_bot:
+        await signal_bot.stop()
     if vector_store:
         await vector_store.close()
     if ollama_client:
@@ -108,7 +115,7 @@ app.add_middleware(
 # Include routers
 app.include_router(health.router, prefix="/health", tags=["health"])
 app.include_router(meetings.router, prefix="/meetings", tags=["meetings"])
-app.include_router(telegram.router, prefix="/telegram", tags=["telegram"])
+app.include_router(signal.router, prefix="/signal", tags=["signal"])
 
 @app.get("/")
 async def root():
@@ -125,8 +132,9 @@ async def health_check():
     try:
         # Check database connection
         from .database import get_db
-        async with get_db() as db:
-            await db.execute("SELECT 1")
+        from sqlalchemy import text
+        async with get_db() as session:
+            await session.execute(text("SELECT 1"))
         
         # Check vector store
         if vector_store:
@@ -136,11 +144,17 @@ async def health_check():
         if ollama_client:
             await ollama_client.health_check()
         
+        # Check Signal bot
+        signal_healthy = False
+        if signal_bot:
+            signal_healthy = await signal_bot.health_check()
+        
         return {
             "status": "healthy",
             "database": "connected",
             "vector_store": "connected",
-            "ollama": "connected"
+            "ollama": "connected",
+            "signal": "connected" if signal_healthy else "disconnected"
         }
     except Exception as e:
         logger.error("Health check failed", error=str(e))
@@ -158,17 +172,12 @@ async def status():
             "database": "PostgreSQL",
             "vector_store": "ChromaDB",
             "llm": "Ollama + Qwen2.5-14B",
-            "telegram": "python-telegram-bot"
+            "messaging": "Signal Note to Self"
         }
     }
 
-# Telegram webhook endpoint moved to telegram router
-# @app.post("/webhook/telegram")
-# async def telegram_webhook(update: dict):
-#     """Telegram webhook endpoint"""
-#     if telegram_bot:
-#         await telegram_bot.handle_webhook(update)
-#     return {"status": "ok"}
+# Signal integration handles messaging via Note to Self
+# No webhook needed - uses polling for secure communication
 
 if __name__ == "__main__":
     import uvicorn

@@ -1,6 +1,6 @@
-# RovoDev - Personal AI Assistant
+# Personal AI Assistant
 
-> **Local-first, privacy-focused AI assistant for meeting processing and personal knowledge management**
+> **Secure Signal integration with end-to-end encryption for meeting processing and personal knowledge management**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
@@ -19,9 +19,9 @@ cd ai-assistant
 chmod +x setup.sh
 ./setup.sh
 
-# 3. Configure your API tokens
-cp .env.example .env
-nano .env  # Add your Telegram bot token and other API keys
+# 3. Configure your Signal phone number
+# Setup script will prompt for your Signal phone number
+# and automatically configure .env file
 
 # 4. Download AI model (8GB download)
 ollama pull qwen2.5:14b

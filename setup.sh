@@ -54,7 +54,8 @@ update_system() {
         iotop \
         nethogs \
         ncdu \
-        tree
+        tree \
+        openssl
     
     echo "✅ System updated successfully"
 }
@@ -120,6 +121,31 @@ EOF
     echo "✅ Docker installed successfully"
 }
 
+# Function to install Signal CLI
+install_signal_cli() {
+    echo "📱 Installing Signal CLI..."
+    
+    # Install Java (required for signal-cli)
+    sudo apt install -y openjdk-17-jre
+    
+    # Download and install signal-cli
+    cd /tmp
+    SIGNAL_CLI_VERSION="0.12.8"
+    wget "https://github.com/AsamK/signal-cli/releases/download/v${SIGNAL_CLI_VERSION}/signal-cli-${SIGNAL_CLI_VERSION}.tar.gz"
+    tar xf signal-cli-*.tar.gz
+    sudo mv signal-cli-* /opt/signal-cli
+    sudo ln -sf /opt/signal-cli/bin/signal-cli /usr/local/bin/
+    
+    # Verify installation
+    if command_exists signal-cli; then
+        echo "✅ Signal CLI installed successfully"
+        echo "📱 Version: $(signal-cli --version)"
+    else
+        echo "❌ Signal CLI installation failed"
+        exit 1
+    fi
+}
+
 # Function to install Ollama
 install_ollama() {
     echo "🤖 Installing Ollama..."
@@ -151,9 +177,13 @@ pull_ollama_model() {
     echo "📥 Pulling Qwen2.5:14b model..."
     
     # This may take a while (several GB download)
-    ollama pull qwen2.5:14b
-    
-    echo "✅ Qwen2.5:14b model downloaded"
+    if ollama pull qwen2.5:14b; then
+        echo "✅ Qwen2.5:14b model downloaded"
+        return 0
+    else
+        echo "❌ Failed to download Qwen2.5:14b model"
+        return 1
+    fi
 }
 
 # Function to optimize system for 32GB RAM
@@ -182,6 +212,49 @@ optimize_system() {
     echo "✅ System optimization complete"
 }
 
+# Function to setup Signal linking
+setup_signal_linking() {
+    echo "📱 Setting up Signal device linking..."
+    echo ""
+    echo "🔗 To link your server as a Signal device:"
+    echo ""
+    echo "1. First, add your phone number to .env file"
+    echo "2. Then run: signal-cli link -n \"AI Assistant Server\""
+    echo "3. Scan the QR code with your Signal app"
+    echo "4. Go to Signal Settings → Linked devices → Link New Device"
+    echo ""
+    echo "⚠️  IMPORTANT: You must complete Signal linking before starting the application!"
+    echo ""
+}
+
+# Function to prompt for Signal phone number
+prompt_signal_phone() {
+    echo "📱 Signal Phone Number Configuration"
+    echo ""
+    echo "Please enter your Signal phone number (including country code):"
+    echo "Example: +1234567890"
+    echo ""
+    
+    while true; do
+        read -p "Signal phone number: " SIGNAL_PHONE_NUMBER
+        
+        # Validate phone number format
+        if [[ $SIGNAL_PHONE_NUMBER =~ ^\+[1-9][0-9]{9,14}$ ]]; then
+            echo "✅ Valid phone number format: $SIGNAL_PHONE_NUMBER"
+            break
+        else
+            echo "❌ Invalid format. Please use format: +1234567890 (country code + number)"
+            echo "   - Must start with +"
+            echo "   - Must be 10-15 digits after country code"
+            echo ""
+        fi
+    done
+    
+    # Export for use in calling function
+    export SIGNAL_PHONE_NUMBER
+    return 0
+}
+
 # Function to setup environment file
 setup_environment() {
     echo "⚙️  Setting up environment configuration..."
@@ -189,9 +262,48 @@ setup_environment() {
     if [[ ! -f .env ]]; then
         cp .env.example .env
         echo "📝 Created .env file from template"
-        echo "⚠️  Please edit .env file with your API tokens and configuration"
+        echo ""
+        
+        # Prompt for Signal phone number
+        prompt_signal_phone
+        
+        # Update .env file with phone number
+        sed -i "s/SIGNAL_PHONE_NUMBER=+1234567890/SIGNAL_PHONE_NUMBER=$SIGNAL_PHONE_NUMBER/" .env
+        echo "✅ Signal phone number configured in .env"
+        
+        # Generate secure postgres password
+        postgres_password=$(openssl rand -base64 32 | tr -d "=+/" | cut -c1-25)
+        sed -i "s/your_secure_postgres_password/$postgres_password/g" .env
+        echo "✅ Generated secure PostgreSQL password"
+        
+        echo ""
+        echo "📝 Environment file configured with:"
+        echo "   - Signal phone number: $SIGNAL_PHONE_NUMBER"
+        echo "   - PostgreSQL password: [generated]"
+        echo ""
+        echo "Optional: You can add these later:"
+        echo "   - NOTION_TOKEN=... (for Notion integration)"
+        echo "   - GMAIL_CREDENTIALS=... (for Gmail integration)"
+        echo ""
+        
     else
         echo "📝 .env file already exists"
+        
+        # Check if Signal phone number is configured
+        if ! grep -q "SIGNAL_PHONE_NUMBER=+" .env 2>/dev/null; then
+            echo "⚠️  Signal phone number not configured. Let's set it up:"
+            prompt_signal_phone
+            
+            # Update existing .env file
+            if grep -q "SIGNAL_PHONE_NUMBER=" .env; then
+                sed -i "s/SIGNAL_PHONE_NUMBER=.*/SIGNAL_PHONE_NUMBER=$SIGNAL_PHONE_NUMBER/" .env
+            else
+                echo "SIGNAL_PHONE_NUMBER=$SIGNAL_PHONE_NUMBER" >> .env
+            fi
+            echo "✅ Signal phone number updated in .env"
+        else
+            echo "✅ Signal phone number already configured"
+        fi
     fi
 }
 
@@ -233,6 +345,9 @@ echo "RovoDev Health Check:"
 curl -s http://localhost:8080/health 2>/dev/null || echo "FastAPI not responding"
 curl -s http://localhost:8000/api/v1/heartbeat 2>/dev/null || echo "ChromaDB not responding"
 curl -s http://localhost:11434/api/tags 2>/dev/null || echo "Ollama not responding"
+echo ""
+echo "Signal Status:"
+signal-cli --version 2>/dev/null || echo "Signal CLI not available"
 EOF
     
     chmod +x ~/system-monitor.sh
@@ -266,6 +381,9 @@ main() {
     
     echo ""
     
+    # Update system packages first
+    update_system
+    
     # Configure security
     configure_security
     
@@ -287,6 +405,14 @@ main() {
         exit 1
     fi
     
+    # Install Signal CLI if not present
+    if ! command_exists signal-cli; then
+        install_signal_cli
+    else
+        echo "✅ Signal CLI already installed"
+        echo "📱 Version: $(signal-cli --version)"
+    fi
+    
     # Install Ollama if not present
     if ! command_exists ollama; then
         install_ollama
@@ -304,7 +430,11 @@ main() {
     echo "🤖 Checking Ollama model..."
     if ! ollama list | grep -q "qwen2.5:14b"; then
         echo "📥 Qwen2.5:14b model not found. Downloading automatically (~8GB)..."
-        pull_ollama_model
+        if pull_ollama_model; then
+            echo "✅ Qwen2.5:14b model downloaded successfully"
+        else
+            echo "❌ Failed to download Ollama model. You can download it later with: ollama pull qwen2.5:14b"
+        fi
     else
         echo "✅ Qwen2.5:14b model already available"
     fi
@@ -315,6 +445,9 @@ main() {
     # Setup environment and directories
     setup_environment
     create_directories
+    
+    # Setup Signal linking instructions
+    setup_signal_linking
     
     # Setup monitoring tools
     setup_monitoring
@@ -328,11 +461,26 @@ main() {
         exit 1
     fi
     
+    # Validate final configuration
+    echo "🔍 Validating configuration..."
+    if [[ -f .env ]]; then
+        if grep -q "SIGNAL_PHONE_NUMBER=+" .env && grep -q "POSTGRES_PASSWORD=" .env; then
+            echo "✅ Environment configuration valid"
+        else
+            echo "❌ Environment configuration incomplete"
+            exit 1
+        fi
+    else
+        echo "❌ .env file not found"
+        exit 1
+    fi
+    
     # Final system check
     echo ""
     echo "🔍 Final system verification..."
     echo "Docker version: $(docker --version)"
     echo "Docker Compose version: $(docker compose version --short)"
+    echo "Signal CLI version: $(signal-cli --version 2>/dev/null || echo 'Not available')"
     echo "Ollama status: $(systemctl is-active ollama)"
     echo "Available models: $(ollama list 2>/dev/null | wc -l) models"
     
@@ -341,27 +489,32 @@ main() {
     echo ""
     echo "✅ System optimized for 32GB RAM"
     echo "✅ Docker and Docker Compose installed"
+    echo "✅ Signal CLI installed and ready"
     echo "✅ Ollama configured and running"
     echo "✅ Security hardening applied"
     echo "✅ Monitoring tools available"
     echo ""
     echo "Next steps:"
-    echo "1. Edit .env file with your API tokens:"
+    echo "1. Edit .env file with your phone number:"
     echo "   nano .env"
+    echo "   # Set SIGNAL_PHONE_NUMBER=+1234567890"
     echo ""
-    echo "2. Download Qwen2.5-14B model (8GB download):"
-    echo "   ollama pull qwen2.5:14b"
+    echo "2. Link Signal device:"
+    echo "   signal-cli link -n \"AI Assistant Server\""
+    echo "   # Scan QR code with Signal app"
     echo ""
-    echo "3. Start RovoDev containers:"
+    echo "3. Test Signal connection:"
+    echo "   signal-cli -a \$(grep SIGNAL_PHONE_NUMBER .env | cut -d= -f2) send \$(grep SIGNAL_PHONE_NUMBER .env | cut -d= -f2) -m \"Test\""
+    echo ""
+    echo "4. Start RovoDev containers:"
     echo "   docker compose up -d"
     echo ""
-    echo "4. Check system health:"
+    echo "5. Check system health:"
     echo "   ./system-monitor.sh"
     echo ""
-    echo "5. Test endpoints:"
+    echo "6. Test endpoints:"
     echo "   curl http://localhost:8080/health"
-    echo "   curl http://localhost:8000/api/v1/heartbeat"
-    echo "   curl http://localhost:11434/api/tags"
+    echo "   curl http://localhost:8080/signal/status"
     echo ""
     echo "For ongoing management:"
     echo "- Monitor: ~/system-monitor.sh"
@@ -369,7 +522,12 @@ main() {
     echo "- Stop: docker compose down"
     echo "- Restart: docker compose restart"
     echo ""
-    echo "⚠️  IMPORTANT: Please logout and login again for Docker group changes to take effect!"
+    echo "⚠️  IMPORTANT NOTES:"
+    echo "- Please logout and login again for Docker group changes to take effect!"
+    echo "- Signal CLI must be linked in BOTH host and container:"
+    echo "  1. Link on host: signal-cli link -n \"Host Device\""
+    echo "  2. Link in container: docker exec -it assistant-api signal-cli link -n \"Container Device\""
+    echo "- Both will need separate QR code scans with your Signal app"
     echo ""
 }
 

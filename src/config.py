@@ -53,13 +53,28 @@ class Settings(BaseSettings):
         description="Model to use for embeddings"
     )
     
-    # Telegram
-    telegram_bot_token: str = Field(
-        description="Telegram bot token"
-    )
-    telegram_webhook_url: Optional[str] = Field(
+    # Signal
+    signal_phone_number: Optional[str] = Field(
         default=None,
-        description="Telegram webhook URL for production"
+        description="Your Signal phone number (e.g., +1234567890)"
+    )
+    
+    def validate_signal_config(self) -> bool:
+        """Validate Signal configuration"""
+        if not self.signal_phone_number:
+            return False
+        if not self.signal_phone_number.startswith('+'):
+            return False
+        if len(self.signal_phone_number) < 10:
+            return False
+        # Check for valid phone number format (+1234567890)
+        import re
+        if not re.match(r'^\+\d{10,15}$', self.signal_phone_number):
+            return False
+        return True
+    signal_cli_path: str = Field(
+        default="/usr/local/bin/signal-cli",
+        description="Path to signal-cli executable"
     )
     
     # Notion

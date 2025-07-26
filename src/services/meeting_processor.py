@@ -5,13 +5,13 @@ Meeting processing service - core business logic
 import logging
 from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..database import Meeting, ActionItem
+from ..models import Meeting, ActionItem
 from ..vector_store import VectorStore
-from .ollama_service import OllamaService
+from ..ollama_client import OllamaClient
 from .calendar_service import CalendarService
-from .telegram_service import TelegramService
+from .signal_service import SignalService
 from ..config import settings
 
 logger = logging.getLogger(__name__)
@@ -20,11 +20,11 @@ logger = logging.getLogger(__name__)
 class MeetingProcessor:
     """Core service for processing meeting content"""
     
-    def __init__(self):
-        self.ollama_service = OllamaService()
+    def __init__(self, vector_store: VectorStore = None, ollama_client: OllamaClient = None):
+        self.ollama_client = ollama_client or OllamaClient()
         self.calendar_service = CalendarService()
-        self.telegram_service = TelegramService()
-        self.vector_store = None
+        self.signal_service = SignalService()
+        self.vector_store = vector_store
     
     async def initialize(self):
         """Initialize vector store connection"""
@@ -38,7 +38,7 @@ class MeetingProcessor:
         chat_id: str = None,
         title: str = None,
         meeting_type: str = None,
-        db: Session = None
+        db: AsyncSession = None
     ) -> Dict[str, Any]:
         """Process meeting content and extract actionable information"""
         
@@ -51,7 +51,7 @@ class MeetingProcessor:
             
             # Categorize meeting if type not provided
             if not meeting_type:
-                meeting_type = await self.ollama_service.categorize_meeting(content)
+                meeting_type = await self.ollama_client.categorize_meeting(content)
             
             # Extract participants and date from content
             participants = self._extract_participants(content)
@@ -64,14 +64,15 @@ class MeetingProcessor:
                 meeting_date=meeting_date,
                 participants=participants,
                 meeting_type=meeting_type,
-                source="telegram" if chat_id else "manual",
+                chat_id=chat_id or settings.signal_phone_number,
+                source="signal" if chat_id else "manual",
                 processed=False
             )
             
             if db:
                 db.add(meeting)
-                db.commit()
-                db.refresh(meeting)
+                await db.commit()
+                await db.refresh(meeting)
             
             # Store in vector database
             await self.vector_store.store_meeting(
@@ -86,7 +87,7 @@ class MeetingProcessor:
             )
             
             # Extract action items
-            action_items_data = await self.ollama_service.extract_action_items(content)
+            action_items_data = await self.ollama_client.extract_action_items(content)
             action_items = []
             
             for item_data in action_items_data:
@@ -97,12 +98,12 @@ class MeetingProcessor:
                     action_items.append(action_item)
             
             # Generate meeting summary
-            summary = await self.ollama_service.summarize_meeting(content)
+            summary = await self.ollama_client.summarize_meeting(content)
             
             # Mark meeting as processed
             if db:
                 meeting.processed = True
-                db.commit()
+                await db.commit()
             
             # Generate calendar files for action items
             calendar_files = []
@@ -123,12 +124,12 @@ class MeetingProcessor:
                         "action_item_id": action_item.id
                     })
             
-            # Send calendar files via Telegram if chat_id provided
+            # Send calendar files via Signal if chat_id provided
             if chat_id and calendar_files:
-                sent_count = await self.telegram_service.send_multiple_calendar_files(
-                    chat_id, calendar_files
+                sent_count = await self.signal_service.send_multiple_calendar_files(
+                    calendar_files
                 )
-                logger.info(f"Sent {sent_count} calendar files to chat {chat_id}")
+                logger.info(f"Sent {sent_count} calendar files to Signal")
             
             # Prepare response
             result = {
@@ -147,6 +148,7 @@ class MeetingProcessor:
                     for ai in action_items
                 ],
                 "summary": summary,
+                "calendar_files": calendar_files,
                 "calendar_files_sent": len(calendar_files) if chat_id else 0
             }
             
@@ -168,7 +170,7 @@ class MeetingProcessor:
             
             prompt = f"Generate a title for this meeting:\n\n{content[:500]}..."
             
-            title = await self.ollama_service.generate_response(prompt, system_prompt)
+            title = await self.ollama_client.generate_response(prompt, system_prompt)
             title = title.strip().strip('"').strip("'")
             
             # Fallback if title is too long or empty
@@ -210,7 +212,7 @@ class MeetingProcessor:
         self, 
         item_data: Dict[str, Any], 
         meeting_id: int, 
-        db: Session
+        db: AsyncSession
     ) -> Optional[ActionItem]:
         """Create action item from extracted data"""
         try:
@@ -237,6 +239,7 @@ class MeetingProcessor:
             
             action_item = ActionItem(
                 meeting_id=meeting_id,
+                chat_id=settings.signal_phone_number,
                 title=item_data.get('title', 'Untitled Action Item'),
                 description=item_data.get('description', ''),
                 due_date=due_date,
@@ -249,8 +252,8 @@ class MeetingProcessor:
             
             if db:
                 db.add(action_item)
-                db.commit()
-                db.refresh(action_item)
+                await db.commit()
+                await db.refresh(action_item)
             
             return action_item
             
@@ -287,9 +290,9 @@ class MeetingProcessor:
     
     async def cleanup(self):
         """Cleanup resources"""
-        if self.ollama_service:
-            await self.ollama_service.cleanup()
-        if self.telegram_service:
-            await self.telegram_service.cleanup()
+        if self.ollama_client:
+            await self.ollama_client.cleanup()
+        if self.signal_service:
+            await self.signal_service.cleanup()
         if self.vector_store:
             await self.vector_store.cleanup()

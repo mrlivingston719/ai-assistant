@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 import httpx
 from datetime import datetime
 
-from ..database import get_db_session
+from ..database import get_db
 from ..config import settings
 
 router = APIRouter()
@@ -24,7 +24,7 @@ async def health_check():
 
 
 @router.get("/detailed")
-async def detailed_health_check(db: AsyncSession = Depends(get_db_session)):
+async def detailed_health_check(db: AsyncSession = Depends(get_db)):
     """Detailed health check including dependencies"""
     health_status = {
         "status": "healthy",
@@ -34,7 +34,8 @@ async def detailed_health_check(db: AsyncSession = Depends(get_db_session)):
     
     # Check database
     try:
-        await db.execute("SELECT 1")
+        from sqlalchemy import text
+        await db.execute(text("SELECT 1"))
         health_status["services"]["database"] = "healthy"
     except Exception as e:
         health_status["services"]["database"] = f"unhealthy: {str(e)}"

@@ -5,7 +5,7 @@ pydantic==2.5.0
 pydantic-settings==2.1.0
 
 # Database
-sqlalchemy==2.0.23
+sqlalchemy[asyncio]==2.0.23
 alembic==1.13.1
 psycopg2-binary==2.9.9
 asyncpg==0.29.0
@@ -17,8 +17,8 @@ chromadb==0.4.18
 ollama==0.1.7
 numpy==1.24.3
 
-# Telegram bot
-python-telegram-bot==20.7
+# HTTP client for Signal service
+httpx==0.25.2
 
 # API integrations
 requests==2.31.0
