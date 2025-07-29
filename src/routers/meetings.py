@@ -11,7 +11,7 @@ import logging
 
 from ..database import get_db_session
 from ..models import Meeting, ActionItem
-from ..main import get_meeting_processor, get_calendar_service
+from ..services.dependencies import get_meeting_processor, get_calendar_service
 from ..services.meeting_processor import MeetingProcessor
 from ..services.calendar_service import CalendarService
 

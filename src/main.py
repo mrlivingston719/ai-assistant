@@ -17,6 +17,7 @@ from .ollama_client import OllamaClient
 from .signal_bot import SignalBot, initialize_signal_bot
 from .services.meeting_processor import MeetingProcessor
 from .services.calendar_service import CalendarService
+from .services import dependencies
 from .routers import meetings, signal
 
 # Configure structured logging
@@ -39,17 +40,11 @@ structlog.configure(
 
 logger = structlog.get_logger()
 
-# Global instances
-signal_bot = None
-vector_store = None
-ollama_client = None
-meeting_processor = None
-calendar_service = None
+# Global instances are now in dependencies module
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan manager"""
-    global signal_bot, vector_store, ollama_client
     
     logger.info("Starting RovoDev application")
     
@@ -60,50 +55,50 @@ async def lifespan(app: FastAPI):
         
         # Initialize vector store
         try:
-            vector_store = VectorStore()
-            await vector_store.initialize()
+            dependencies.vector_store = VectorStore()
+            await dependencies.vector_store.initialize()
             logger.info("Vector store initialized")
         except Exception as e:
             logger.error("Vector store initialization failed", error=str(e))
-            vector_store = None
+            dependencies.vector_store = None
         
         # Initialize Ollama client
         try:
-            ollama_client = OllamaClient()
-            await ollama_client.initialize()
+            dependencies.ollama_client = OllamaClient()
+            await dependencies.ollama_client.initialize()
             logger.info("Ollama client initialized")
         except Exception as e:
             logger.error("Ollama client initialization failed", error=str(e))
-            ollama_client = None
+            dependencies.ollama_client = None
         
         # Initialize services
         try:
-            meeting_processor = MeetingProcessor(vector_store, ollama_client)
-            await meeting_processor.initialize()
+            dependencies.meeting_processor = MeetingProcessor(dependencies.vector_store, dependencies.ollama_client)
+            await dependencies.meeting_processor.initialize()
             logger.info("Meeting processor initialized")
         except Exception as e:
             logger.error("Meeting processor initialization failed", error=str(e))
-            meeting_processor = None
+            dependencies.meeting_processor = None
         
         try:
-            calendar_service = CalendarService()
+            dependencies.calendar_service = CalendarService()
             logger.info("Calendar service initialized")
         except Exception as e:
             logger.error("Calendar service initialization failed", error=str(e))
-            calendar_service = None
+            dependencies.calendar_service = None
         
         # Initialize Signal bot
         try:
-            signal_bot = await initialize_signal_bot(vector_store, ollama_client)
+            dependencies.signal_bot = await initialize_signal_bot(dependencies.vector_store, dependencies.ollama_client)
             logger.info("Signal bot initialized")
         except Exception as e:
             logger.error("Signal bot initialization failed", error=str(e))
             logger.warning("Continuing without Signal bot - check Signal CLI configuration")
-            signal_bot = None
+            dependencies.signal_bot = None
         
         # Start background tasks
-        if signal_bot:
-            asyncio.create_task(signal_bot.start_monitoring())
+        if dependencies.signal_bot:
+            asyncio.create_task(dependencies.signal_bot.start_monitoring())
         else:
             logger.warning("Signal bot not available - no message monitoring")
         
@@ -117,14 +112,14 @@ async def lifespan(app: FastAPI):
     
     # Cleanup
     logger.info("Shutting down RovoDev application")
-    if signal_bot:
-        await signal_bot.stop()
-    if meeting_processor:
-        await meeting_processor.cleanup()
-    if ollama_client:
-        await ollama_client.close()
-    if vector_store:
-        await vector_store.close()
+    if dependencies.signal_bot:
+        await dependencies.signal_bot.stop()
+    if dependencies.meeting_processor:
+        await dependencies.meeting_processor.cleanup()
+    if dependencies.ollama_client:
+        await dependencies.ollama_client.close()
+    if dependencies.vector_store:
+        await dependencies.vector_store.close()
 
 # Create FastAPI app
 app = FastAPI(
@@ -170,9 +165,9 @@ async def health_check():
             db_status = "disconnected"
         
         # Check services
-        vector_status = "connected" if vector_store and hasattr(vector_store, 'client') else "disconnected"
-        ollama_status = "connected" if ollama_client else "disconnected"
-        signal_status = "connected" if signal_bot else "disconnected"
+        vector_status = "connected" if dependencies.vector_store and hasattr(dependencies.vector_store, 'client') else "disconnected"
+        ollama_status = "connected" if dependencies.ollama_client else "disconnected"
+        signal_status = "connected" if dependencies.signal_bot else "disconnected"
         
         overall_status = "healthy" if db_status == "connected" else "unhealthy"
         
@@ -205,18 +200,7 @@ async def status():
         }
     }
 
-# Service access functions for routers
-def get_meeting_processor():
-    """Get meeting processor instance"""
-    if meeting_processor is None:
-        raise RuntimeError("Meeting processor not initialized")
-    return meeting_processor
-
-def get_calendar_service():
-    """Get calendar service instance"""
-    if calendar_service is None:
-        raise RuntimeError("Calendar service not initialized")
-    return calendar_service
+# Service access functions moved to dependencies module
 
 # Signal integration handles messaging via Note to Self
 # No webhook needed - uses polling for secure communication
