@@ -69,9 +69,8 @@ curl http://localhost:8080/health
 - [ ] Internet connectivity
 
 ### 2. API Tokens Ready
-- [ ] Telegram Bot Token (from @BotFather)
+- [ ] Signal phone number configured
 - [ ] Notion Integration Token (optional)
-- [ ] Gmail API Credentials (optional)
 
 ### 3. Domain/Network Setup (Optional)
 - [ ] Domain name configured
@@ -124,7 +123,7 @@ exit
 ### Step 4: Environment Configuration
 
 ```bash
-cd ~/rovodev
+cd ~/ai-assistant
 
 # Copy environment template
 cp .env.example .env
@@ -138,12 +137,12 @@ nano .env
 # Database
 POSTGRES_PASSWORD=your_secure_password_here
 
-# Telegram Bot
-TELEGRAM_BOT_TOKEN=your_telegram_bot_token
+# Signal Integration
+SIGNAL_PHONE_NUMBER=+1234567890
 
 # Optional integrations
 NOTION_TOKEN=your_notion_token
-GMAIL_CREDENTIALS={"type":"service_account",...}
+# Note: Gmail integration removed - using Signal "Note to Self" only
 
 # Application settings
 LOG_LEVEL=INFO
@@ -214,11 +213,8 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
-    location /webhook/telegram {
-        proxy_pass http://localhost:8080/webhook/telegram;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
+    # Signal uses local communication - no webhook needed
+    # All Signal integration is handled via signal-cli locally
 }
 ```
 
@@ -256,7 +252,7 @@ sudo ufw --force enable
 
 ## 🔄 Updates and Maintenance
 
-### Updating RovoDev
+### Updating Personal AI Assistant
 
 ```bash
 cd ~/ai-assistant
@@ -445,7 +441,7 @@ nano ~/harden-ai-assistant.sh
 **Security Hardening:**
 ```bash
 #!/bin/bash
-# Basic security hardening for RovoDev
+# Basic security hardening for Personal AI Assistant
 
 # Update system
 sudo apt update && sudo apt upgrade -y
@@ -476,4 +472,4 @@ echo "Security hardening completed"
 
 ---
 
-**This deployment guide ensures RovoDev can be reliably deployed to any Ubuntu server with minimal manual intervention while maintaining security and performance best practices.**
+**This deployment guide ensures the Personal AI Assistant can be reliably deployed to any Ubuntu server with minimal manual intervention while maintaining security and performance best practices. The simplified architecture makes deployment, maintenance, and troubleshooting straightforward for personal use.**

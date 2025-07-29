@@ -73,6 +73,7 @@ tmp_rovodev_*
 # Backup files
 *.bak
 *.backup
+backup
 
 # ChromaDB data (will be in Docker volumes)
 chroma_data/
@@ -142,3 +143,6 @@ scripts/
 
 # Temporary code files
 tmp_code_*.bash
+
+# Claude files
+CLAUDE.md

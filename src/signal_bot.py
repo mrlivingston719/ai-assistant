@@ -1,6 +1,6 @@
 """
 Signal bot for Note to Self integration
-Replaces telegram_bot.py with Signal-based communication
+Signal-based communication for secure meeting processing
 """
 
 import asyncio
@@ -17,7 +17,6 @@ from .services.signal_service import SignalService
 from .services.meeting_processor import MeetingProcessor
 from .ollama_client import OllamaClient
 from .vector_store import VectorStore
-from .config import settings
 
 logger = structlog.get_logger()
 

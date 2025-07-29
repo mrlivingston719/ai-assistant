@@ -38,23 +38,18 @@ services:
     networks:
       - assistant-network
 
-  assistant:
-    build:
-      context: .
-      tags:
-        - assistant-api:latest
-    image: assistant-api:latest
-    container_name: assistant-api
+  api:
+    build: .
+    container_name: ai-assistant-api
     restart: unless-stopped
     environment:
       - DATABASE_URL=postgresql://assistant:${POSTGRES_PASSWORD}@postgres:5432/assistant
       - CHROMADB_URL=http://chromadb:8000
-      - OLLAMA_URL=http://172.17.0.1:11434
+      - OLLAMA_URL=http://host.docker.internal:11434
       - SIGNAL_PHONE_NUMBER=${SIGNAL_PHONE_NUMBER}
       - NOTION_TOKEN=${NOTION_TOKEN}
-      - GMAIL_CREDENTIALS=${GMAIL_CREDENTIALS}
     volumes:
-      - ./src:/app/src
+      - ./src:/app/src  # Development only - remove in production
       - ./logs:/app/logs
       - signal_cli_data:/root/.local/share/signal-cli
     ports:
@@ -64,6 +59,8 @@ services:
         condition: service_healthy
       chromadb:
         condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s

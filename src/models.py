@@ -18,7 +18,7 @@ class Meeting(Base):
     __tablename__ = "meetings"
     
     id = Column(Integer, primary_key=True, index=True)
-    chat_id = Column(String(255), nullable=False)  # Signal phone number or Telegram chat ID
+    chat_id = Column(String(255), nullable=False)  # Signal phone number
     
     # Meeting metadata
     title = Column(String(500), nullable=True)
@@ -51,7 +51,7 @@ class ActionItem(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     meeting_id = Column(Integer, ForeignKey("meetings.id"), nullable=True)
-    chat_id = Column(String(255), nullable=False)  # Signal phone number or Telegram chat ID
+    chat_id = Column(String(255), nullable=False)  # Signal phone number
     
     # Action item details
     title = Column(String(500), nullable=False)
@@ -87,7 +87,7 @@ class Conversation(Base):
     __tablename__ = "conversations"
     
     id = Column(Integer, primary_key=True, index=True)
-    chat_id = Column(String(255), nullable=False)  # Signal phone number or Telegram chat ID
+    chat_id = Column(String(255), nullable=False)  # Signal phone number
     
     # Message details
     user_message = Column(Text, nullable=True)
