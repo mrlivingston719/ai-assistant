@@ -39,11 +39,7 @@ services:
       - assistant-network
 
   assistant:
-    build:
-      context: .
-      tags:
-        - assistant-api:latest
-    image: assistant-api:latest
+    build: .
     container_name: assistant-api
     restart: unless-stopped
     environment:
