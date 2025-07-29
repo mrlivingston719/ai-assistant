@@ -164,10 +164,10 @@ main() {
     
     # ChromaDB Health
     print_test "ChromaDB health"
-    if curl -s -f http://localhost:8000/api/v1/version >/dev/null 2>&1; then
+    if curl -s -f http://localhost:8000/api/v2/heartbeat >/dev/null 2>&1; then
         print_pass "ChromaDB responding"
         local chroma_version
-        chroma_version=$(curl -s http://localhost:8000/api/v1/version 2>/dev/null || echo "unknown")
+        chroma_version=$(curl -s http://localhost:8000/api/v2/version 2>/dev/null || echo "unknown")
         print_info "ChromaDB version: $chroma_version"
     else
         print_fail "ChromaDB not responding"

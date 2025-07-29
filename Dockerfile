@@ -13,14 +13,13 @@ RUN apt-get update && apt-get install -y \
 
 # Install Signal CLI with error checking
 RUN cd /tmp && \
-    SIGNAL_CLI_VERSION="0.12.8" && \
-    echo "Downloading Signal CLI v${SIGNAL_CLI_VERSION}..." && \
-    wget "https://github.com/AsamK/signal-cli/releases/download/v${SIGNAL_CLI_VERSION}/signal-cli-${SIGNAL_CLI_VERSION}.tar.gz" && \
+    echo "Downloading Signal CLI..." && \
+    wget https://github.com/AsamK/signal-cli/releases/download/v0.13.18/signal-cli-0.13.18.tar.gz && \
     echo "Extracting Signal CLI..." && \
-    tar xf signal-cli-${SIGNAL_CLI_VERSION}.tar.gz && \
+    tar xf signal-cli-0.13.18.tar.gz && \
     echo "Installing Signal CLI to /opt/signal-cli..." && \
     mkdir -p /opt && \
-    mv signal-cli-${SIGNAL_CLI_VERSION} /opt/signal-cli && \
+    mv signal-cli-0.13.18 /opt/signal-cli && \
     echo "Creating symlink..." && \
     ln -sf /opt/signal-cli/bin/signal-cli /usr/local/bin/signal-cli && \
     echo "Verifying installation..." && \
