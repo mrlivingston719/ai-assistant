@@ -24,7 +24,7 @@ cleanup_previous_deployment() {
     
     # Remove project images to force rebuild
     echo "Removing old container images..."
-    docker image ls --format "table {{.Repository}}\t{{.Tag}}" | grep "ai-assistant" | awk '{print $1":"$2}' | xargs -r docker image rm 2>/dev/null || true
+    docker image ls --format "table {{.Repository}}\t{{.Tag}}" | grep "assistant-api\|ai-assistant" | awk '{print $1":"$2}' | xargs -r docker image rm 2>/dev/null || true
     
     # Prune build cache to ensure fresh build
     echo "Pruning Docker build cache..."
@@ -227,11 +227,11 @@ main() {
     echo "   docker compose up -d"
     echo ""
     echo "2. Link Signal device (inside container):"
-    echo "   docker exec -it ai-assistant-api signal-cli link -n \"AI Assistant\""
+    echo "   docker exec -it assistant-api signal-cli link -n \"AI Assistant\""
     echo "   # Scan QR code with Signal app"
     echo ""
     echo "3. Test Signal connection (inside container):"
-    echo "   docker exec -it ai-assistant-api signal-cli -a \$(grep SIGNAL_PHONE_NUMBER .env | cut -d= -f2) send \$(grep SIGNAL_PHONE_NUMBER .env | cut -d= -f2) -m \"Test\""
+    echo "   docker exec -it assistant-api signal-cli -a \$(grep SIGNAL_PHONE_NUMBER .env | cut -d= -f2) send \$(grep SIGNAL_PHONE_NUMBER .env | cut -d= -f2) -m \"Test\""
     echo ""
     echo "4. Check health:"
     echo "   curl http://localhost:8080/health"
