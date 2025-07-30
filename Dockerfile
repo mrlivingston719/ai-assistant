@@ -1,15 +1,22 @@
-FROM python:3.11-slim-bookworm
+FROM ubuntu:22.04
 
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies including Java for Signal CLI
+# Install system dependencies including Python and Java for Signal CLI
 RUN apt-get update && apt-get install -y \
     curl \
     gcc \
-    openjdk-21-jre-headless \
+    python3.11 \
+    python3.11-pip \
+    python3.11-venv \
+    openjdk-21-jre \
     wget \
     && rm -rf /var/lib/apt/lists/*
+
+# Create symlinks for python and pip
+RUN ln -sf /usr/bin/python3.11 /usr/bin/python && \
+    ln -sf /usr/bin/python3.11 /usr/bin/python3
 
 # Install Signal CLI with step-by-step error checking
 RUN cd /tmp
