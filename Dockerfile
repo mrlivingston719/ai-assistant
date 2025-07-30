@@ -7,7 +7,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     curl \
     gcc \
-    openjdk-21-jre \
+    openjdk-21-jre-headless \
     wget \
     && rm -rf /var/lib/apt/lists/*
 
