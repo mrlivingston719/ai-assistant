@@ -125,13 +125,10 @@ celerybeat.pid
 dmypy.json
 
 # Internal planning and development files (not needed for deployment)
-current-status.md
-project-context.md
+
 recommendations.md
 architecture-diagrams.md
 quick-start.md
-ubuntu-setup-guide.md
-.agent.md
 
 # Architecture diagram files
 *.mmd
@@ -144,5 +141,3 @@ scripts/
 # Temporary code files
 tmp_code_*.bash
 
-# Claude files
-CLAUDE.md
