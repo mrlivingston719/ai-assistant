@@ -1,18 +1,20 @@
-FROM ubuntu:24.04
+FROM ubuntu:22.04
 
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies including Python and Java for Signal CLI
+# Install system dependencies and add Eclipse Adoptium repository for OpenJDK 21
 RUN apt-get update && apt-get install -y \
     curl \
     gcc \
     python3 \
     python3-pip \
-    python3-venv \
-    python3-full \
-    openjdk-21-jre \
     wget \
+    software-properties-common \
+    && wget -O - https://packages.adoptium.net/artifactory/api/gpg/public/key | apt-key add - \
+    && echo "deb https://packages.adoptium.net/artifactory/deb $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/adoptium.list \
+    && apt-get update \
+    && apt-get install -y temurin-21-jre \
     && rm -rf /var/lib/apt/lists/*
 
 # Create symlinks for python and pip
@@ -42,16 +44,10 @@ RUN echo "Creating symlink..." && \
 RUN echo "Cleaning up..." && \
     rm -rf /tmp/signal-cli-*
 
-# Create virtual environment
-RUN python3 -m venv /venv
-
-# Update PATH to use virtual environment
-ENV PATH="/venv/bin:$PATH"
-
 # Copy requirements first for better caching
 COPY requirements.txt .
 
-# Install Python dependencies in virtual environment
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
