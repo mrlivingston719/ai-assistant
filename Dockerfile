@@ -7,16 +7,15 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     curl \
     gcc \
-    python3.12 \
-    python3.12-pip \
-    python3.12-venv \
+    python3 \
+    python3-pip \
+    python3-venv \
     openjdk-21-jre \
     wget \
     && rm -rf /var/lib/apt/lists/*
 
 # Create symlinks for python and pip
-RUN ln -sf /usr/bin/python3.12 /usr/bin/python && \
-    ln -sf /usr/bin/python3.12 /usr/bin/python3
+RUN ln -sf /usr/bin/python3 /usr/bin/python
 
 # Install Signal CLI with step-by-step error checking
 RUN cd /tmp
