@@ -11,21 +11,32 @@ RUN apt-get update && apt-get install -y \
     wget \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Signal CLI with error checking
-RUN cd /tmp && \
-    echo "Downloading Signal CLI..." && \
-    wget https://github.com/AsamK/signal-cli/releases/download/v0.13.18/signal-cli-0.13.18.tar.gz && \
-    echo "Extracting Signal CLI..." && \
-    tar xf signal-cli-0.13.18.tar.gz && \
-    echo "Installing Signal CLI to /opt/signal-cli..." && \
+# Install Signal CLI with step-by-step error checking
+RUN cd /tmp
+
+RUN echo "Downloading Signal CLI..." && \
+    wget -v https://github.com/AsamK/signal-cli/releases/download/v0.13.18/signal-cli-0.13.18.tar.gz || \
+    (echo "Download failed, trying alternative" && curl -L -o signal-cli-0.13.18.tar.gz https://github.com/AsamK/signal-cli/releases/download/v0.13.18/signal-cli-0.13.18.tar.gz)
+
+RUN echo "Extracting Signal CLI..." && \
+    tar -xvf signal-cli-0.13.18.tar.gz && \
+    ls -la
+
+RUN echo "Installing Signal CLI to /opt/signal-cli..." && \
     mkdir -p /opt && \
     mv signal-cli-0.13.18 /opt/signal-cli && \
-    echo "Creating symlink..." && \
+    ls -la /opt/
+
+RUN echo "Creating symlink..." && \
     ln -sf /opt/signal-cli/bin/signal-cli /usr/local/bin/signal-cli && \
-    echo "Verifying installation..." && \
+    ls -la /usr/local/bin/signal-cli
+
+RUN echo "Verifying installation..." && \
     ls -la /opt/signal-cli/bin/ && \
-    /opt/signal-cli/bin/signal-cli --version && \
-    echo "Cleaning up..." && \
+    java -version && \
+    /opt/signal-cli/bin/signal-cli --version
+
+RUN echo "Cleaning up..." && \
     rm -rf /tmp/signal-cli-*
 
 # Copy requirements first for better caching
