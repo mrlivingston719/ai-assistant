@@ -41,10 +41,16 @@ RUN echo "Creating symlink..." && \
 RUN echo "Cleaning up..." && \
     rm -rf /tmp/signal-cli-*
 
+# Create virtual environment
+RUN python3 -m venv /venv
+
+# Update PATH to use virtual environment
+ENV PATH="/venv/bin:$PATH"
+
 # Copy requirements first for better caching
 COPY requirements.txt .
 
-# Install Python dependencies
+# Install Python dependencies in virtual environment
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
