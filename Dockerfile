@@ -31,10 +31,6 @@ RUN echo "Creating symlink..." && \
     ln -sf /opt/signal-cli/bin/signal-cli /usr/local/bin/signal-cli && \
     ls -la /usr/local/bin/signal-cli
 
-RUN echo "Verifying installation..." && \
-    ls -la /opt/signal-cli/bin/ && \
-    java -version && \
-    /opt/signal-cli/bin/signal-cli --version
 
 RUN echo "Cleaning up..." && \
     rm -rf /tmp/signal-cli-*
