@@ -3,7 +3,7 @@ FROM ubuntu:22.04
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies and add Eclipse Adoptium repository for OpenJDK 21
+# Install system dependencies and add OpenJDK PPA for Java 21
 RUN apt-get update && apt-get install -y \
     curl \
     gcc \
@@ -11,10 +11,9 @@ RUN apt-get update && apt-get install -y \
     python3-pip \
     wget \
     software-properties-common \
-    && wget -O - https://packages.adoptium.net/artifactory/api/gpg/public/key | apt-key add - \
-    && echo "deb https://packages.adoptium.net/artifactory/deb $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/adoptium.list \
+    && add-apt-repository ppa:openjdk-r/ppa -y \
     && apt-get update \
-    && apt-get install -y temurin-21-jre \
+    && apt-get install -y openjdk-21-jre \
     && rm -rf /var/lib/apt/lists/*
 
 # Create symlinks for python and pip
